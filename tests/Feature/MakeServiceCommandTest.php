@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 
 beforeEach(function () {
     // Clean up any existing test files

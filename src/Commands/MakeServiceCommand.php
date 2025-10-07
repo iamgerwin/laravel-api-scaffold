@@ -3,9 +3,9 @@
 namespace Iamgerwin\LaravelApiScaffold\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class MakeServiceCommand extends Command
 {
@@ -23,8 +23,11 @@ class MakeServiceCommand extends Command
     protected $description = 'Create a new service class with optional API scaffolding';
 
     protected string $serviceName;
+
     protected string $servicePath;
+
     protected string $modelName;
+
     protected array $createdFiles = [];
 
     public function handle(): int
@@ -83,7 +86,7 @@ class MakeServiceCommand extends Command
         $basePath = config('api-scaffold.service_path', app_path('Services'));
         $this->servicePath = "{$basePath}/{$this->modelName}";
 
-        if (!File::exists($this->servicePath)) {
+        if (! File::exists($this->servicePath)) {
             File::makeDirectory($this->servicePath, 0755, true);
             $this->info("Created directory: {$this->servicePath}");
         }
@@ -102,7 +105,7 @@ class MakeServiceCommand extends Command
         $stub = $this->getStub($stubType);
 
         $content = $this->replaceStubPlaceholders($stub, [
-            'namespace' => config('api-scaffold.namespaces.service', 'App\\Services') . "\\{$this->modelName}",
+            'namespace' => config('api-scaffold.namespaces.service', 'App\\Services')."\\{$this->modelName}",
             'class' => $serviceClass,
             'interface' => "{$this->modelName}ServiceInterface",
             'model' => $this->modelName,
@@ -129,7 +132,7 @@ class MakeServiceCommand extends Command
         $stub = $this->getStub($stubType);
 
         $content = $this->replaceStubPlaceholders($stub, [
-            'namespace' => config('api-scaffold.namespaces.service', 'App\\Services') . "\\{$this->modelName}",
+            'namespace' => config('api-scaffold.namespaces.service', 'App\\Services')."\\{$this->modelName}",
             'interface' => $interfaceName,
             'model' => $this->modelName,
             'modelNamespace' => config('api-scaffold.namespaces.model', 'App\\Models'),
@@ -158,8 +161,8 @@ class MakeServiceCommand extends Command
             'class' => $controllerName,
             'service' => "{$this->modelName}Service",
             'serviceInterface' => "{$this->modelName}ServiceInterface",
-            'serviceNamespace' => config('api-scaffold.namespaces.service', 'App\\Services') . "\\{$this->modelName}",
-            'serviceVariable' => Str::camel($this->modelName) . 'Service',
+            'serviceNamespace' => config('api-scaffold.namespaces.service', 'App\\Services')."\\{$this->modelName}",
+            'serviceVariable' => Str::camel($this->modelName).'Service',
             'request' => "{$this->modelName}Request",
             'requestNamespace' => config('api-scaffold.namespaces.request', 'App\\Http\\Requests'),
             'resource' => "{$this->modelName}Resource",
@@ -218,8 +221,9 @@ class MakeServiceCommand extends Command
     {
         $modelPath = app_path("Models/{$this->modelName}.php");
 
-        if (File::exists($modelPath) && !$this->option('force')) {
+        if (File::exists($modelPath) && ! $this->option('force')) {
             $this->warn("Model already exists: {$modelPath}");
+
             return;
         }
 
@@ -271,8 +275,9 @@ class MakeServiceCommand extends Command
     {
         $providerPath = config('api-scaffold.provider_path', app_path('Providers/AppServiceProvider.php'));
 
-        if (!File::exists($providerPath)) {
+        if (! File::exists($providerPath)) {
             $this->warn("AppServiceProvider not found at: {$providerPath}");
+
             return;
         }
 
@@ -280,17 +285,18 @@ class MakeServiceCommand extends Command
 
         $interfaceClass = "{$this->modelName}ServiceInterface";
         $serviceClass = "{$this->modelName}Service";
-        $serviceNamespace = config('api-scaffold.namespaces.service', 'App\\Services') . "\\{$this->modelName}";
+        $serviceNamespace = config('api-scaffold.namespaces.service', 'App\\Services')."\\{$this->modelName}";
 
         // Check if binding already exists
         if (Str::contains($content, $interfaceClass)) {
-            $this->warn("Service binding already exists in AppServiceProvider");
+            $this->warn('Service binding already exists in AppServiceProvider');
+
             return;
         }
 
         // Backup if configured
         if (config('api-scaffold.backup_existing', true)) {
-            $backupPath = $providerPath . '.backup.' . date('YmdHis');
+            $backupPath = $providerPath.'.backup.'.date('YmdHis');
             File::copy($providerPath, $backupPath);
             $this->info("Backed up AppServiceProvider to: {$backupPath}");
         }
@@ -298,8 +304,9 @@ class MakeServiceCommand extends Command
         // Add use statements
         $useStatement = "use {$serviceNamespace}\\{$interfaceClass};\nuse {$serviceNamespace}\\{$serviceClass};";
 
-        if (!Str::contains($content, "namespace App\\Providers;")) {
-            $this->warn("Could not find namespace declaration in AppServiceProvider");
+        if (! Str::contains($content, 'namespace App\\Providers;')) {
+            $this->warn('Could not find namespace declaration in AppServiceProvider');
+
             return;
         }
 
@@ -332,13 +339,13 @@ class MakeServiceCommand extends Command
         }
 
         File::put($providerPath, $content);
-        $this->info("Registered service binding in AppServiceProvider");
+        $this->info('Registered service binding in AppServiceProvider');
     }
 
     protected function getStub(string $name): string
     {
         $customStubPath = resource_path("stubs/vendor/api-scaffold/{$name}");
-        $packageStubPath = __DIR__ . "/../../resources/stubs/{$name}";
+        $packageStubPath = __DIR__."/../../resources/stubs/{$name}";
 
         if (config('api-scaffold.use_custom_stubs', false) && File::exists($customStubPath)) {
             return File::get($customStubPath);
@@ -363,20 +370,22 @@ class MakeServiceCommand extends Command
 
     protected function fileExists(string $path): bool
     {
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             return false;
         }
 
         if ($this->option('force')) {
             if (config('api-scaffold.backup_existing', true)) {
-                $backupPath = $path . '.backup.' . date('YmdHis');
+                $backupPath = $path.'.backup.'.date('YmdHis');
                 File::copy($path, $backupPath);
                 $this->info("Backed up existing file to: {$backupPath}");
             }
+
             return false;
         }
 
         $this->warn("File already exists: {$path}");
+
         return true;
     }
 
