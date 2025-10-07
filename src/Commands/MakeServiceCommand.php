@@ -269,6 +269,7 @@ class MakeServiceCommand extends Command
             'tableName' => Str::snake(Str::pluralStudly($this->modelName)),
         ]);
 
+        $this->ensureDirectoryExists($filePath);
         File::put($filePath, $content);
         $this->createdFiles[] = $filePath;
         $this->info("Created test: {$filePath}");
