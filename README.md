@@ -19,8 +19,8 @@ Laravel API Scaffold automates the creation of service-oriented architecture com
 
 ## Requirements
 
-- PHP 8.1 or higher
-- Laravel 10.x or 11.x
+- PHP 8.1, 8.2, 8.3, or 8.4
+- Laravel 10.x, 11.x, or 12.x
 - Composer
 
 ## Installation
@@ -241,6 +241,52 @@ class CommentController extends Controller
 }
 ```
 
+## Architecture Flow
+
+This package implements a clean Service Layer Architecture pattern. Here's how the request flows through the application:
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Route
+    participant Controller
+    participant Service
+    participant Model
+    participant Database
+
+    Client->>Route: HTTP Request (POST /api/comments)
+    Route->>Controller: Route to CommentController@store
+    Controller->>Controller: Validate via CommentRequest
+    Controller->>Service: $commentService->store($data)
+    Service->>Service: Business Logic Processing
+    Service->>Model: Comment::create($data)
+    Model->>Database: INSERT query
+    Database-->>Model: Record created
+    Model-->>Service: Comment instance
+    Service-->>Controller: Comment instance
+    Controller->>Controller: Transform via CommentResource
+    Controller-->>Client: JSON Response (201)
+```
+
+### Flow Explanation
+
+1. **Client Request**: The client sends an HTTP request to your Laravel application
+2. **Routing**: Laravel routes the request to the appropriate controller method
+3. **Validation**: The FormRequest validates incoming data automatically
+4. **Service Layer**: The controller delegates business logic to the service
+5. **Business Logic**: The service processes the request (calculations, validations, etc.)
+6. **Data Persistence**: The service uses the model to interact with the database
+7. **Response Transformation**: The controller transforms the data using API Resources
+8. **Client Response**: A formatted JSON response is returned to the client
+
+### Benefits of This Architecture
+
+- **Separation of Concerns**: Controllers handle HTTP, Services handle business logic
+- **Testability**: Services can be tested independently of HTTP layer
+- **Reusability**: Services can be used across multiple controllers or commands
+- **Maintainability**: Business logic is centralized and easier to modify
+- **Dependency Injection**: Interfaces allow for easy mocking and testing
+
 ## Edge Cases and Advanced Usage
 
 ### Working with Existing Files
@@ -356,6 +402,45 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 Contributions are welcome! Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
+### Reporting Issues
+
+If you encounter a bug or have a feature request, please submit an issue on GitHub:
+
+**Issue Submission Guidelines:**
+
+1. **Visit**: [https://github.com/iamgerwin/laravel-api-scaffold/issues](https://github.com/iamgerwin/laravel-api-scaffold/issues)
+2. **Search First**: Check if your issue already exists before creating a new one
+3. **Provide Details**: Include the following information:
+   - Clear and descriptive title
+   - Laravel version and PHP version
+   - Package version
+   - Steps to reproduce the issue
+   - Expected behavior vs actual behavior
+   - Error messages or stack traces (if applicable)
+   - Screenshots or screen recordings (highly appreciated)
+   - Code samples demonstrating the issue
+
+**Example Issue Format:**
+```
+**Environment:**
+- Laravel: 11.x
+- PHP: 8.3
+- Package: 0.1.4
+
+**Steps to Reproduce:**
+1. Run `php artisan make:service-api Post --all`
+2. Notice that...
+
+**Expected Behavior:**
+Should generate...
+
+**Actual Behavior:**
+Instead, it generates...
+
+**Screenshots:**
+[Attach screenshot or recording]
+```
+
 ### Development Setup
 
 1. Clone the repository
@@ -365,7 +450,7 @@ Contributions are welcome! Please see [CONTRIBUTING](CONTRIBUTING.md) for detail
 
 ## Security Vulnerabilities
 
-If you discover a security vulnerability within Laravel API Scaffold, please send an email to iamgerwin@example.com. All security vulnerabilities will be promptly addressed.
+If you discover a security vulnerability within Laravel API Scaffold, please send an email to [iamgerwin@live.com](mailto:iamgerwin@live.com). All security vulnerabilities will be promptly addressed.
 
 ## Roadmap
 
