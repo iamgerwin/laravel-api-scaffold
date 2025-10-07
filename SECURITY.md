@@ -10,7 +10,7 @@ We take security seriously and will address security vulnerabilities promptly. T
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability within Laravel API Scaffold, please send an email to iamgerwin@example.com. All security vulnerabilities will be promptly addressed.
+If you discover a security vulnerability within Laravel API Scaffold, please send an email to [iamgerwin@live.com](mailto:iamgerwin@live.com). All security vulnerabilities will be promptly addressed.
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
