@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2024-10-08
+
+### Fixed
+- PHPStan configuration: Removed invalid parameters (checkOctaneCompatibility, checkModelProperties)
+- Code style issues: Fixed class attribute separation and import ordering per Laravel Pint standards
+
 ## [0.1.0] - 2024-10-08
 
 ### Added
@@ -53,5 +59,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.0...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.1...HEAD
+[0.1.1]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/iamgerwin/laravel-api-scaffold/releases/tag/0.1.0
