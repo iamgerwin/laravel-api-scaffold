@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2024-10-08
+
+### Fixed
+- PHPStan configuration: Removed deprecated `checkMissingIterableValueType` parameter
+- PHPUnit configuration: Migrated to PHPUnit 10+ schema using `<source>` element
+- Code coverage: Updated configuration structure for better compatibility with modern testing tools
+
 ## [0.1.3] - 2024-10-08
 
 ### Added
@@ -75,7 +82,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.3...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.4...HEAD
+[0.1.4]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.3...0.1.4
 [0.1.3]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.2...0.1.3
 [0.1.2]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.0...0.1.1
