@@ -170,6 +170,7 @@ class MakeServiceCommand extends Command
             'model' => $this->modelName,
         ]);
 
+        $this->ensureDirectoryExists($filePath);
         File::put($filePath, $content);
         $this->createdFiles[] = $filePath;
         $this->info("Created controller: {$filePath}");
@@ -191,6 +192,7 @@ class MakeServiceCommand extends Command
             'class' => $requestName,
         ]);
 
+        $this->ensureDirectoryExists($filePath);
         File::put($filePath, $content);
         $this->createdFiles[] = $filePath;
         $this->info("Created request: {$filePath}");
@@ -212,6 +214,7 @@ class MakeServiceCommand extends Command
             'class' => $resourceName,
         ]);
 
+        $this->ensureDirectoryExists($filePath);
         File::put($filePath, $content);
         $this->createdFiles[] = $filePath;
         $this->info("Created resource: {$filePath}");
@@ -387,6 +390,15 @@ class MakeServiceCommand extends Command
         $this->warn("File already exists: {$path}");
 
         return true;
+    }
+
+    protected function ensureDirectoryExists(string $filePath): void
+    {
+        $directory = dirname($filePath);
+
+        if (! File::exists($directory)) {
+            File::makeDirectory($directory, 0755, true);
+        }
     }
 
     protected function displaySummary(): void
