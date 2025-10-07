@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2024-10-08
+
+### Added
+- Laravel 12 compatibility: Support for Laravel 12.x and PHP 8.4
+- Extended support for Pest 3.x, PHPUnit 11.x, and PHPStan 2.x
+
+### Fixed
+- Test file generation: Ensure test directory exists before creating test files
+
 ## [0.1.2] - 2024-10-08
 
 ### Fixed
@@ -66,7 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.2...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.3...HEAD
+[0.1.3]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.2...0.1.3
 [0.1.2]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/iamgerwin/laravel-api-scaffold/releases/tag/0.1.0
