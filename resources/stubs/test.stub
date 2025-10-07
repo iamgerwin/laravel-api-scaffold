@@ -1,0 +1,60 @@
+<?php
+
+use {{ modelNamespace }}\{{ model }};
+
+test('can list {{ modelVariablePlural }}', function () {
+    {{ model }}::factory()->count(3)->create();
+
+    $response = $this->getJson('/api/{{ routeName }}');
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'data' => [
+                '*' => ['id'],
+            ],
+        ]);
+});
+
+test('can show single {{ modelVariable }}', function () {
+    ${{ modelVariable }} = {{ model }}::factory()->create();
+
+    $response = $this->getJson("/api/{{ routeName }}/{${{ modelVariable }}->id}");
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'id' => ${{ modelVariable }}->id,
+        ]);
+});
+
+test('can create {{ modelVariable }}', function () {
+    $data = [
+        // Add test data here
+    ];
+
+    $response = $this->postJson('/api/{{ routeName }}', $data);
+
+    $response->assertStatus(201);
+    $this->assertDatabaseHas('{{ tableName }}', $data);
+});
+
+test('can update {{ modelVariable }}', function () {
+    ${{ modelVariable }} = {{ model }}::factory()->create();
+
+    $data = [
+        // Add test data here
+    ];
+
+    $response = $this->putJson("/api/{{ routeName }}/{${{ modelVariable }}->id}", $data);
+
+    $response->assertStatus(200);
+    $this->assertDatabaseHas('{{ tableName }}', $data);
+});
+
+test('can delete {{ modelVariable }}', function () {
+    ${{ modelVariable }} = {{ model }}::factory()->create();
+
+    $response = $this->deleteJson("/api/{{ routeName }}/{${{ modelVariable }}->id}");
+
+    $response->assertStatus(200);
+    $this->assertDatabaseMissing('{{ tableName }}', ['id' => ${{ modelVariable }}->id]);
+});

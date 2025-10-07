@@ -1,0 +1,35 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelNamespace }}\{{ model }};
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+interface {{ interface }}
+{
+    /**
+     * Get paginated list of {{ modelVariable }} records.
+     */
+    public function index(int $perPage = 15): LengthAwarePaginator;
+
+    /**
+     * Get a single {{ modelVariable }} by ID.
+     */
+    public function show(int $id): ?{{ model }};
+
+    /**
+     * Create a new {{ modelVariable }} record.
+     */
+    public function store(array $data): {{ model }};
+
+    /**
+     * Update an existing {{ modelVariable }} record.
+     */
+    public function update(int $id, array $data): bool;
+
+    /**
+     * Delete a {{ modelVariable }} record.
+     */
+    public function destroy(int $id): bool;
+}

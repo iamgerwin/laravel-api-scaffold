@@ -1,0 +1,79 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ serviceNamespace }}\{{ service }};
+use {{ requestNamespace }}\{{ request }};
+use {{ resourceNamespace }}\{{ resource }};
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+
+class {{ class }} extends Controller
+{
+    public function __construct(
+        protected {{ serviceInterface }} ${{ serviceVariable }}
+    ) {
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(): AnonymousResourceCollection
+    {
+        $data = $this->{{ serviceVariable }}->index();
+
+        return {{ resource }}::collection($data);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(int $id): JsonResponse
+    {
+        $data = $this->{{ serviceVariable }}->show($id);
+
+        if (!$data) {
+            return response()->json(['message' => '{{ model }} not found'], 404);
+        }
+
+        return response()->json(new {{ resource }}($data));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store({{ request }} $request): JsonResponse
+    {
+        $data = $this->{{ serviceVariable }}->store($request->validated());
+
+        return response()->json(new {{ resource }}($data), 201);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update({{ request }} $request, int $id): JsonResponse
+    {
+        $updated = $this->{{ serviceVariable }}->update($id, $request->validated());
+
+        if (!$updated) {
+            return response()->json(['message' => '{{ model }} not found'], 404);
+        }
+
+        return response()->json(['message' => '{{ model }} updated successfully']);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $deleted = $this->{{ serviceVariable }}->destroy($id);
+
+        if (!$deleted) {
+            return response()->json(['message' => '{{ model }} not found'], 404);
+        }
+
+        return response()->json(['message' => '{{ model }} deleted successfully']);
+    }
+}
