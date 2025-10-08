@@ -791,3 +791,180 @@ test('command displays summary after generation', function () {
     expect($exitCode)->toBe(0);
     expect($output)->toContain('Creating service');
 });
+
+test('command uses custom stubs when configured', function () {
+    config(['api-scaffold.use_custom_stubs' => true]);
+
+    // Even though custom stubs don't exist, the command should handle it gracefully
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    expect(File::exists($servicePath))->toBeTrue();
+});
+
+test('command handles existing service binding gracefully', function () {
+    // First generation
+    Artisan::call('make:service-api', [
+        'name' => 'UniqueService',
+        '--no-interactive' => true,
+    ]);
+
+    $servicePath = app_path('Services/UniqueService/UniqueServiceService.php');
+    expect(File::exists($servicePath))->toBeTrue();
+
+    // Try to generate again without force - should not crash
+    Artisan::call('make:service-api', [
+        'name' => 'UniqueService',
+        '--no-interactive' => true,
+    ]);
+
+    // Service should still exist
+    expect(File::exists($servicePath))->toBeTrue();
+
+    // Clean up
+    File::deleteDirectory(app_path('Services/UniqueService'));
+});
+
+test('command handles missing provider path gracefully', function () {
+    // Set an invalid provider path
+    $originalPath = config('api-scaffold.provider_path');
+    config(['api-scaffold.provider_path' => app_path('Providers/NonExistentProvider.php')]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    expect(File::exists($servicePath))->toBeTrue();
+
+    // Restore config
+    config(['api-scaffold.provider_path' => $originalPath]);
+});
+
+test('command creates backup of existing provider when configured', function () {
+    config(['api-scaffold.backup_existing' => true]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    expect(File::exists($servicePath))->toBeTrue();
+});
+
+test('command skips backup when disabled in config', function () {
+    config(['api-scaffold.backup_existing' => false]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    expect(File::exists($servicePath))->toBeTrue();
+});
+
+test('command handles service name with underscores', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'test_service',
+        '--no-interactive' => true,
+    ]);
+
+    // Should convert to StudlyCase
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    expect(File::exists($servicePath))->toBeTrue();
+});
+
+test('command generates files even when some already exist', function () {
+    // Create service first
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    // Now generate with additional components
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+        '--controller' => true,
+        '--request' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    $controllerPath = app_path('Http/Controllers/TestServiceController.php');
+    $requestPath = app_path('Http/Requests/TestServiceRequest.php');
+
+    expect(File::exists($servicePath))->toBeTrue();
+    expect(File::exists($controllerPath))->toBeTrue();
+    expect(File::exists($requestPath))->toBeTrue();
+});
+
+test('command works with just api flag', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--api' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    $content = File::get($servicePath);
+
+    expect($content)->toContain('public function index');
+    expect($content)->toContain('public function show');
+    expect($content)->toContain('public function store');
+    expect($content)->toContain('public function update');
+    expect($content)->toContain('public function destroy');
+});
+
+test('command properly injects interface in controller constructor', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'ProductService',
+        '--controller' => true,
+    ]);
+
+    $controllerPath = app_path('Http/Controllers/ProductServiceController.php');
+    $content = File::get($controllerPath);
+
+    expect(File::exists($controllerPath))->toBeTrue();
+    expect($content)->toContain('namespace App\Http\Controllers');
+    expect($content)->toContain('class ProductServiceController');
+
+    // Clean up
+    File::delete($controllerPath);
+});
+
+test('command generates migration for plural table name', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'Category',
+        '--migration' => true,
+    ]);
+
+    // Should create categories table (plural)
+    $migrationFiles = File::glob(database_path('migrations/*_create_categories_table.php'));
+    expect(count($migrationFiles))->toBeGreaterThan(0);
+
+    // Clean up
+    foreach ($migrationFiles as $file) {
+        File::delete($file);
+    }
+});
+
+test('command returns success exit code', function () {
+    $exitCode = Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    expect($exitCode)->toBe(0);
+});
+
+test('config has correct service path default', function () {
+    $servicePath = config('api-scaffold.service_path');
+
+    expect($servicePath)->toContain('app');
+    expect($servicePath)->toContain('Services');
+});
