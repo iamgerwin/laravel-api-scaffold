@@ -46,7 +46,10 @@ afterEach(function () {
 });
 
 test('command generates service and interface files', function () {
-    Artisan::call('make:service-api', ['name' => 'TestService']);
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
 
     $servicePath = app_path('Services/TestService/TestServiceService.php');
     $interfacePath = app_path('Services/TestService/TestServiceServiceInterface.php');
@@ -128,13 +131,19 @@ test('command generates resource file with transformation structure', function (
 
 test('command does not override existing files without force flag', function () {
     // Create initial service
-    Artisan::call('make:service-api', ['name' => 'TestService']);
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
 
     $servicePath = app_path('Services/TestService/TestServiceService.php');
     $originalContent = File::get($servicePath);
 
     // Try to create again
-    Artisan::call('make:service-api', ['name' => 'TestService']);
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
 
     $newContent = File::get($servicePath);
 
@@ -143,7 +152,10 @@ test('command does not override existing files without force flag', function () 
 
 test('command creates backup when force flag is used', function () {
     // Create initial service
-    Artisan::call('make:service-api', ['name' => 'TestService']);
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
 
     $servicePath = app_path('Services/TestService/TestServiceService.php');
 
@@ -153,6 +165,7 @@ test('command creates backup when force flag is used', function () {
     // Force recreate
     Artisan::call('make:service-api', [
         'name' => 'TestService',
+        '--no-interactive' => true,
         '--force' => true,
     ]);
 
@@ -170,7 +183,10 @@ test('command creates service directory if it does not exist', function () {
         File::deleteDirectory($servicesBasePath);
     }
 
-    Artisan::call('make:service-api', ['name' => 'TestService']);
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
 
     expect(File::exists($servicesBasePath))->toBeTrue();
     expect(File::exists(app_path('Services/TestService')))->toBeTrue();
@@ -298,19 +314,13 @@ test('service-layer preset has correct configuration', function () {
     expect($preset['options']['test'])->toBeTrue();
 });
 
-test('command uses interactive flag to force interactive mode', function () {
-    config(['api-scaffold.interactive_mode' => false]);
+test('command recognizes interactive flag in signature', function () {
+    // Test that the command signature includes the interactive flag
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+    $definition = $command->getDefinition();
 
-    // Even with interactive mode disabled, --interactive flag should work
-    // We can't fully test the interactive flow, but we can test the flag is recognized
-    $exitCode = Artisan::call('make:service-api', [
-        'name' => 'TestService',
-        '--interactive' => true,
-        '--no-interaction' => true, // This prevents actual prompts in tests
-    ]);
-
-    // Command should attempt to run (may fail due to no interaction, but that's expected)
-    expect($exitCode)->toBeInt();
+    expect($definition->hasOption('interactive'))->toBeTrue();
+    expect($definition->hasOption('no-interactive'))->toBeTrue();
 });
 
 test('getCachedPreferences returns empty when caching is disabled', function () {
