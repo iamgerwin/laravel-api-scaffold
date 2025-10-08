@@ -663,8 +663,10 @@ class MakeServiceCommand extends Command
             return File::get($packageStubPath);
         }
 
+        // @codeCoverageIgnoreStart
         $this->error("Stub file not found: {$name}");
         exit(1);
+        // @codeCoverageIgnoreEnd
     }
 
     protected function replaceStubPlaceholders(string $stub, array $replacements): string
