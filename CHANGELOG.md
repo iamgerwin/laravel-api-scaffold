@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-10-09
+
+### Added
+- **Interactive Mode**: New intuitive wizard-based interface for scaffolding (addresses #1)
+  - Automatically launches when no flags are provided
+  - Step-by-step guidance through preset selection and component customization
+  - Visual preview and confirmation before file generation
+- **Preset Templates**: Four predefined scaffolding templates
+  - Minimal: Service and Interface only
+  - API Complete: Full API scaffold with all components
+  - Service Layer: Service, Interface, Model, and Tests
+  - Custom: Individual component selection
+- **User Preferences Caching**: Remembers last selections for faster subsequent use
+- **New Command Flags**:
+  - `--interactive`: Force interactive mode even when flags are provided
+  - `--no-interactive`: Disable interactive mode and use CLI flags
+- **Configuration Options**:
+  - `interactive_mode`: Toggle interactive mode on/off globally
+  - `presets`: Define custom preset configurations
+  - `cache_preferences`: Enable/disable preference caching
+  - `preferences_cache_path`: Customize cache file location
+
+### Changed
+- Added `laravel/prompts` dependency for enhanced CLI interactions
+- Updated README with comprehensive interactive mode documentation
+- Enhanced test coverage with interactive mode and preset tests
+
+### Improved
+- Developer experience: Reduced learning curve for new users
+- Command discoverability: Easier to understand available options through interactive prompts
+- Visual feedback: Table-based preview of components to be generated
+
 ## [0.1.4] - 2024-10-08
 
 ### Fixed
@@ -82,7 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.4...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.4...0.2.0
 [0.1.4]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.3...0.1.4
 [0.1.3]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.2...0.1.3
 [0.1.2]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.1...0.1.2

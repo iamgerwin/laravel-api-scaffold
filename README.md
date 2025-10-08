@@ -49,12 +49,43 @@ php artisan vendor:publish --tag="api-scaffold-stubs"
 
 ## Usage
 
-### Basic Usage
+### Interactive Mode (New!)
 
-Generate a service with its interface:
+The package now features an intuitive interactive mode that guides you through the scaffolding process. When you run the command without any flags, it automatically launches an interactive wizard:
 
 ```bash
-php artisan make:service-api Comment
+php artisan make:service-api Product
+```
+
+The interactive wizard will:
+1. **Preset Selection**: Choose from predefined templates (Minimal, API Complete, Service Layer, or Custom)
+2. **Component Selection**: Select which components to generate
+3. **Preview & Confirm**: Review your selections before generating files
+4. **Cache Preferences**: Remember your choices for next time
+
+#### Available Presets
+
+- **Minimal**: Service and Interface only
+- **API Complete**: Full API scaffold with all components (Service, Interface, Model, Migration, Controller, Request, Resource, Tests)
+- **Service Layer**: Service, Interface, Model, and Tests (great for business logic-heavy applications)
+- **Custom**: Choose components individually
+
+#### Interactive Mode Options
+
+```bash
+# Force interactive mode (even with flags)
+php artisan make:service-api Product --interactive
+
+# Disable interactive mode (use flags instead)
+php artisan make:service-api Product --no-interactive --all
+```
+
+### Basic Usage
+
+Generate a service with its interface (non-interactive):
+
+```bash
+php artisan make:service-api Comment --no-interactive
 ```
 
 This creates:
@@ -166,6 +197,39 @@ return [
         'resource' => 'App\\Http\\Resources',
         'model' => 'App\\Models',
     ],
+
+    // Interactive mode enabled by default
+    'interactive_mode' => true,
+
+    // Preset configurations for interactive mode
+    'presets' => [
+        'minimal' => [
+            'name' => 'Minimal',
+            'description' => 'Service and Interface only',
+            'options' => [...],
+        ],
+        'api-complete' => [
+            'name' => 'API Complete',
+            'description' => 'Full API scaffold with all components',
+            'options' => [...],
+        ],
+        'service-layer' => [
+            'name' => 'Service Layer',
+            'description' => 'Service, Interface, Model, and Tests',
+            'options' => [...],
+        ],
+        'custom' => [
+            'name' => 'Custom',
+            'description' => 'Choose components individually',
+            'options' => [],
+        ],
+    ],
+
+    // Cache user preferences for faster subsequent use
+    'cache_preferences' => true,
+
+    // Path where preferences will be cached
+    'preferences_cache_path' => storage_path('app/api-scaffold-preferences.json'),
 ];
 ```
 
@@ -455,7 +519,7 @@ If you discover a security vulnerability within Laravel API Scaffold, please sen
 ## Roadmap
 
 - [ ] Support for custom service method templates
-- [ ] Interactive mode for selecting which files to generate
+- [x] Interactive mode for selecting which files to generate
 - [ ] Support for API versioning structure
 - [ ] Repository pattern option
 - [ ] GraphQL support
