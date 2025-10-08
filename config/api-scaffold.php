@@ -118,4 +118,96 @@ return [
         'model' => 'App\\Models',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Interactive Mode
+    |--------------------------------------------------------------------------
+    |
+    | Enable interactive mode by default when no flags are provided.
+    | Interactive mode provides a step-by-step wizard for file generation.
+    |
+    */
+
+    'interactive_mode' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Presets Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Define preset configurations for common use cases. Users can select
+    | a preset in interactive mode to quickly scaffold common patterns.
+    |
+    */
+
+    'presets' => [
+        'minimal' => [
+            'name' => 'Minimal',
+            'description' => 'Service and Interface only',
+            'options' => [
+                'api' => false,
+                'model' => false,
+                'migration' => false,
+                'controller' => false,
+                'request' => false,
+                'resource' => false,
+                'test' => false,
+            ],
+        ],
+        'api-complete' => [
+            'name' => 'API Complete',
+            'description' => 'Full API scaffold with all components',
+            'options' => [
+                'api' => true,
+                'model' => true,
+                'migration' => true,
+                'controller' => true,
+                'request' => true,
+                'resource' => true,
+                'test' => true,
+            ],
+        ],
+        'service-layer' => [
+            'name' => 'Service Layer',
+            'description' => 'Service, Interface, Model, and Tests',
+            'options' => [
+                'api' => true,
+                'model' => true,
+                'migration' => false,
+                'controller' => false,
+                'request' => false,
+                'resource' => false,
+                'test' => true,
+            ],
+        ],
+        'custom' => [
+            'name' => 'Custom',
+            'description' => 'Choose components individually',
+            'options' => [],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache User Preferences
+    |--------------------------------------------------------------------------
+    |
+    | Cache the last selected preset and options for faster subsequent use.
+    | Cached preferences will be suggested as defaults in interactive mode.
+    |
+    */
+
+    'cache_preferences' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Preferences Cache Path
+    |--------------------------------------------------------------------------
+    |
+    | The file path where user preferences will be cached.
+    |
+    */
+
+    'preferences_cache_path' => storage_path('app/api-scaffold-preferences.json'),
+
 ];
