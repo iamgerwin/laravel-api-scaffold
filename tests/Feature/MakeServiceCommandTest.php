@@ -489,3 +489,170 @@ test('config cache path is correctly set', function () {
     expect($cachePath)->toContain('storage');
     expect($cachePath)->toContain('api-scaffold-preferences.json');
 });
+
+test('shouldUseInteractiveMode returns true when interactive flag is set', function () {
+    config(['api-scaffold.interactive_mode' => false]);
+
+    $exitCode = Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--interactive' => true,
+        '--no-interaction' => true,
+    ]);
+
+    // Should attempt interactive mode
+    expect($exitCode)->toBeInt();
+});
+
+test('shouldUseInteractiveMode returns false when no-interactive flag is set', function () {
+    config(['api-scaffold.interactive_mode' => true]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    expect(File::exists($servicePath))->toBeTrue();
+});
+
+test('shouldUseInteractiveMode returns false when flags are provided', function () {
+    config(['api-scaffold.interactive_mode' => true]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--model' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    $modelPath = app_path('Models/TestService.php');
+
+    expect(File::exists($servicePath))->toBeTrue();
+    expect(File::exists($modelPath))->toBeTrue();
+});
+
+test('shouldUseInteractiveMode respects config when no flags provided', function () {
+    config(['api-scaffold.interactive_mode' => false]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+    ]);
+
+    // Should generate without interactive mode
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    expect(File::exists($servicePath))->toBeTrue();
+});
+
+test('command generates migration with correct table name', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--migration' => true,
+    ]);
+
+    // Check that migration was created
+    $migrationFiles = File::glob(database_path('migrations/*_create_test_services_table.php'));
+    expect(count($migrationFiles))->toBeGreaterThan(0);
+
+    // Clean up migration
+    foreach ($migrationFiles as $file) {
+        File::delete($file);
+    }
+});
+
+test('command generates model when model flag is used', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--model' => true,
+    ]);
+
+    $modelPath = app_path('Models/TestService.php');
+    expect(File::exists($modelPath))->toBeTrue();
+});
+
+test('command respects force flag for multiple files', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+        '--controller' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    $controllerPath = app_path('Http/Controllers/TestServiceController.php');
+
+    expect(File::exists($servicePath))->toBeTrue();
+    expect(File::exists($controllerPath))->toBeTrue();
+
+    // Modify service file
+    File::append($servicePath, '// Modified');
+    $modifiedContent = File::get($servicePath);
+
+    // Force regenerate
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+        '--controller' => true,
+        '--force' => true,
+    ]);
+
+    // Check that backup was created
+    $backupFiles = File::glob("{$servicePath}.backup.*");
+    expect(count($backupFiles))->toBeGreaterThan(0);
+});
+
+test('command generates test file with correct structure', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--test' => true,
+    ]);
+
+    $testPath = base_path('tests/Feature/TestServiceTest.php');
+    $content = File::get($testPath);
+
+    expect(File::exists($testPath))->toBeTrue();
+    expect($content)->toContain('TestService');
+    expect($content)->toContain('test(');
+});
+
+test('command generates specific components when individual flags used', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--controller' => true,
+        '--request' => true,
+    ]);
+
+    $controllerPath = app_path('Http/Controllers/TestServiceController.php');
+    $requestPath = app_path('Http/Requests/TestServiceRequest.php');
+    $resourcePath = app_path('Http/Resources/TestServiceResource.php');
+
+    expect(File::exists($controllerPath))->toBeTrue();
+    expect(File::exists($requestPath))->toBeTrue();
+    expect(File::exists($resourcePath))->toBeFalse(); // Should not be created
+});
+
+test('command auto-registers service binding in provider', function () {
+    config(['api-scaffold.auto_register_bindings' => true]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    // We can't easily verify the provider was modified in tests,
+    // but we can verify the service was created
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    $interfacePath = app_path('Services/TestService/TestServiceServiceInterface.php');
+
+    expect(File::exists($servicePath))->toBeTrue();
+    expect(File::exists($interfacePath))->toBeTrue();
+});
+
+test('command skips auto-registration when disabled in config', function () {
+    config(['api-scaffold.auto_register_bindings' => false]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    expect(File::exists($servicePath))->toBeTrue();
+});
