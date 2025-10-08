@@ -1242,3 +1242,113 @@ test('command warns when model already exists without force flag', function () {
     File::delete(app_path('Models/ExistingModel.php'));
     File::deleteDirectory(app_path('Services/ExistingModel'));
 });
+
+test('shouldUseInteractiveMode returns true when interactive flag is true', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    // Mock input to have interactive option
+    $input = Mockery::mock(\Symfony\Component\Console\Input\InputInterface::class);
+    $input->shouldReceive('getArgument')->with('name')->andReturn('Test');
+    $input->shouldReceive('getOption')->with('interactive')->andReturn(true);
+    $input->shouldReceive('getOption')->with('no-interactive')->andReturn(false);
+    $input->shouldReceive('hasParameterOption')->andReturn(false);
+    $input->shouldReceive('bind')->andReturnNull();
+    $input->shouldReceive('isInteractive')->andReturn(true);
+    $input->shouldReceive('validate')->andReturnNull();
+
+    $output = Mockery::mock(\Symfony\Component\Console\Output\OutputInterface::class);
+    $output->shouldReceive('getVerbosity')->andReturn(32);
+
+    $reflection = new ReflectionClass($command);
+    $inputProperty = $reflection->getProperty('input');
+    $inputProperty->setAccessible(true);
+    $inputProperty->setValue($command, $input);
+
+    $outputProperty = $reflection->getProperty('output');
+    $outputProperty->setAccessible(true);
+    $outputProperty->setValue($command, $output);
+
+    $method = $reflection->getMethod('shouldUseInteractiveMode');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeTrue();
+
+    Mockery::close();
+});
+
+test('getStub method loads custom stub when configured', function () {
+    config(['api-scaffold.use_custom_stubs' => true]);
+
+    $customStubPath = resource_path('stubs/vendor/api-scaffold/service.stub');
+
+    // Create custom stub directory and file
+    File::ensureDirectoryExists(dirname($customStubPath));
+    File::put($customStubPath, '<?php // Custom stub content');
+
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('getStub');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command, 'service.stub');
+
+    expect($result)->toContain('// Custom stub content');
+
+    // Cleanup
+    File::delete($customStubPath);
+    File::deleteDirectory(dirname($customStubPath));
+    config(['api-scaffold.use_custom_stubs' => false]);
+});
+
+test('registerServiceBinding handles provider without namespace gracefully', function () {
+    // Create a temporary provider without proper namespace
+    $providerPath = app_path('Providers/InvalidProvider.php');
+    File::ensureDirectoryExists(dirname($providerPath));
+    File::put($providerPath, '<?php class InvalidProvider {}');
+
+    config(['api-scaffold.provider_path' => $providerPath]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'InvalidTest',
+        '--no-interactive' => true,
+    ]);
+
+    $output = Artisan::output();
+    expect($output)->toContain('Could not find namespace declaration');
+
+    // Cleanup
+    File::delete($providerPath);
+    File::deleteDirectory(app_path('Services/InvalidTest'));
+
+    // Reset config
+    config(['api-scaffold.provider_path' => app_path('Providers/AppServiceProvider.php')]);
+});
+
+test('registerServiceBinding handles provider with alternative register signature', function () {
+    // Create a provider with register() instead of register(): void
+    $providerPath = app_path('Providers/AltProvider.php');
+    File::ensureDirectoryExists(dirname($providerPath));
+    File::put($providerPath, "<?php\n\nnamespace App\\Providers;\n\nclass AltProvider\n{\n    public function register()\n    {\n        //\n    }\n}");
+
+    config(['api-scaffold.provider_path' => $providerPath]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'AltTest',
+        '--no-interactive' => true,
+    ]);
+
+    $content = File::get($providerPath);
+    expect($content)->toContain('AltTestServiceInterface');
+    expect($content)->toContain('AltTestService');
+    expect($content)->toContain('bind(AltTestServiceInterface::class, AltTestService::class)');
+
+    // Cleanup
+    File::delete($providerPath);
+    File::deleteDirectory(app_path('Services/AltTest'));
+
+    // Reset config
+    config(['api-scaffold.provider_path' => app_path('Providers/AppServiceProvider.php')]);
+});
