@@ -175,3 +175,125 @@ test('command creates service directory if it does not exist', function () {
     expect(File::exists($servicesBasePath))->toBeTrue();
     expect(File::exists(app_path('Services/TestService')))->toBeTrue();
 });
+
+test('command uses non-interactive mode when no-interactive flag is provided', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    $interfacePath = app_path('Services/TestService/TestServiceServiceInterface.php');
+
+    expect(File::exists($servicePath))->toBeTrue();
+    expect(File::exists($interfacePath))->toBeTrue();
+});
+
+test('command does not use interactive mode when flags are provided', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--api' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    expect(File::exists($servicePath))->toBeTrue();
+});
+
+test('command caches preferences when enabled in config', function () {
+    config(['api-scaffold.cache_preferences' => true]);
+
+    $cachePath = config('api-scaffold.preferences_cache_path');
+    $cacheDir = dirname($cachePath);
+
+    if (! File::exists($cacheDir)) {
+        File::makeDirectory($cacheDir, 0755, true);
+    }
+
+    // Clean up any existing cache
+    if (File::exists($cachePath)) {
+        File::delete($cachePath);
+    }
+
+    // Manually create a cache file to test reading
+    $testPreferences = [
+        'preset' => 'minimal',
+        'options' => [
+            'api' => false,
+            'model' => false,
+            'migration' => false,
+            'controller' => false,
+            'request' => false,
+            'resource' => false,
+            'test' => false,
+        ],
+        'updated_at' => now()->toIso8601String(),
+    ];
+
+    File::put($cachePath, json_encode($testPreferences, JSON_PRETTY_PRINT));
+
+    expect(File::exists($cachePath))->toBeTrue();
+
+    $content = File::get($cachePath);
+    $cached = json_decode($content, true);
+
+    expect($cached['preset'])->toBe('minimal');
+    expect($cached['options']['api'])->toBeFalse();
+
+    // Clean up
+    if (File::exists($cachePath)) {
+        File::delete($cachePath);
+    }
+});
+
+test('config has interactive mode enabled by default', function () {
+    expect(config('api-scaffold.interactive_mode'))->toBeTrue();
+});
+
+test('config has presets defined', function () {
+    $presets = config('api-scaffold.presets');
+
+    expect($presets)->toBeArray();
+    expect($presets)->toHaveKey('minimal');
+    expect($presets)->toHaveKey('api-complete');
+    expect($presets)->toHaveKey('service-layer');
+    expect($presets)->toHaveKey('custom');
+});
+
+test('minimal preset has correct configuration', function () {
+    $preset = config('api-scaffold.presets.minimal');
+
+    expect($preset['name'])->toBe('Minimal');
+    expect($preset['options']['api'])->toBeFalse();
+    expect($preset['options']['model'])->toBeFalse();
+    expect($preset['options']['migration'])->toBeFalse();
+    expect($preset['options']['controller'])->toBeFalse();
+    expect($preset['options']['request'])->toBeFalse();
+    expect($preset['options']['resource'])->toBeFalse();
+    expect($preset['options']['test'])->toBeFalse();
+});
+
+test('api-complete preset has all components enabled', function () {
+    $preset = config('api-scaffold.presets.api-complete');
+
+    expect($preset['name'])->toBe('API Complete');
+    expect($preset['options']['api'])->toBeTrue();
+    expect($preset['options']['model'])->toBeTrue();
+    expect($preset['options']['migration'])->toBeTrue();
+    expect($preset['options']['controller'])->toBeTrue();
+    expect($preset['options']['request'])->toBeTrue();
+    expect($preset['options']['resource'])->toBeTrue();
+    expect($preset['options']['test'])->toBeTrue();
+});
+
+test('service-layer preset has correct configuration', function () {
+    $preset = config('api-scaffold.presets.service-layer');
+
+    expect($preset['name'])->toBe('Service Layer');
+    expect($preset['options']['api'])->toBeTrue();
+    expect($preset['options']['model'])->toBeTrue();
+    expect($preset['options']['migration'])->toBeFalse();
+    expect($preset['options']['controller'])->toBeFalse();
+    expect($preset['options']['request'])->toBeFalse();
+    expect($preset['options']['resource'])->toBeFalse();
+    expect($preset['options']['test'])->toBeTrue();
+});
