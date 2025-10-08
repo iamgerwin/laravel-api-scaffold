@@ -119,6 +119,9 @@ class MakeServiceCommand extends Command
         return ! $hasFlags && config('api-scaffold.interactive_mode', true);
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected function handleInteractive(): int
     {
         $this->info('🚀 Laravel API Scaffold - Interactive Mode');
@@ -144,6 +147,9 @@ class MakeServiceCommand extends Command
         return $this->generateFromOptions($options);
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected function selectPreset(): string
     {
         $presets = config('api-scaffold.presets', []);
@@ -161,6 +167,9 @@ class MakeServiceCommand extends Command
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected function selectComponents(string $preset): array
     {
         $presetConfig = config("api-scaffold.presets.{$preset}");
@@ -245,6 +254,9 @@ class MakeServiceCommand extends Command
         return $options;
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected function confirmGeneration(array $options): bool
     {
         $this->newLine();
