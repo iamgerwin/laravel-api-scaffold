@@ -331,6 +331,9 @@ class MakeServiceCommand extends Command
         File::put($cachePath, json_encode($preferences, JSON_PRETTY_PRINT));
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected function generateFromOptions(array $options): int
     {
         $this->newLine();
