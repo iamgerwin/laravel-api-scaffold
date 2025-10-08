@@ -656,3 +656,138 @@ test('command skips auto-registration when disabled in config', function () {
     $servicePath = app_path('Services/TestService/TestServiceService.php');
     expect(File::exists($servicePath))->toBeTrue();
 });
+
+test('command handles multi-word service names correctly', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'UserProfile',
+        '--no-interactive' => true,
+    ]);
+
+    $servicePath = app_path('Services/UserProfile/UserProfileService.php');
+    $interfacePath = app_path('Services/UserProfile/UserProfileServiceInterface.php');
+
+    expect(File::exists($servicePath))->toBeTrue();
+    expect(File::exists($interfacePath))->toBeTrue();
+
+    // Verify content has correct class names
+    $content = File::get($servicePath);
+    expect($content)->toContain('class UserProfileService');
+
+    // Clean up
+    File::deleteDirectory(app_path('Services/UserProfile'));
+});
+
+test('command generates files with correct namespaces', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+        '--controller' => true,
+    ]);
+
+    $servicePath = app_path('Services/TestService/TestServiceService.php');
+    $controllerPath = app_path('Http/Controllers/TestServiceController.php');
+
+    $serviceContent = File::get($servicePath);
+    $controllerContent = File::get($controllerPath);
+
+    expect($serviceContent)->toContain('namespace App\Services\TestService');
+    expect($controllerContent)->toContain('namespace App\Http\Controllers');
+});
+
+test('command generates interface with correct methods when api flag used', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--api' => true,
+    ]);
+
+    $interfacePath = app_path('Services/TestService/TestServiceServiceInterface.php');
+    $content = File::get($interfacePath);
+
+    expect($content)->toContain('interface TestServiceServiceInterface');
+    expect($content)->toContain('public function index');
+    expect($content)->toContain('public function show');
+    expect($content)->toContain('public function store');
+    expect($content)->toContain('public function update');
+    expect($content)->toContain('public function destroy');
+});
+
+test('command handles resource generation with correct structure', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--resource' => true,
+    ]);
+
+    $resourcePath = app_path('Http/Resources/TestServiceResource.php');
+    $content = File::get($resourcePath);
+
+    expect($content)->toContain('use Illuminate\Http\Resources\Json\JsonResource');
+    expect($content)->toContain('class TestServiceResource extends JsonResource');
+});
+
+test('command generates request with authorize and rules methods', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--request' => true,
+    ]);
+
+    $requestPath = app_path('Http/Requests/TestServiceRequest.php');
+    $content = File::get($requestPath);
+
+    expect($content)->toContain('use Illuminate\Foundation\Http\FormRequest');
+    expect($content)->toContain('public function authorize()');
+    expect($content)->toContain('public function rules()');
+});
+
+test('command with all flag generates complete api scaffold', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--all' => true,
+    ]);
+
+    // Verify all files were created
+    expect(File::exists(app_path('Services/TestService/TestServiceService.php')))->toBeTrue();
+    expect(File::exists(app_path('Services/TestService/TestServiceServiceInterface.php')))->toBeTrue();
+    expect(File::exists(app_path('Models/TestService.php')))->toBeTrue();
+    expect(File::exists(app_path('Http/Controllers/TestServiceController.php')))->toBeTrue();
+    expect(File::exists(app_path('Http/Requests/TestServiceRequest.php')))->toBeTrue();
+    expect(File::exists(app_path('Http/Resources/TestServiceResource.php')))->toBeTrue();
+    expect(File::exists(base_path('tests/Feature/TestServiceTest.php')))->toBeTrue();
+
+    // Verify migration was created
+    $migrationFiles = File::glob(database_path('migrations/*_create_test_services_table.php'));
+    expect(count($migrationFiles))->toBeGreaterThan(0);
+
+    // Clean up migrations
+    foreach ($migrationFiles as $file) {
+        File::delete($file);
+    }
+});
+
+test('command creates directories recursively when needed', function () {
+    // Delete Services directory if it exists
+    if (File::exists(app_path('Services'))) {
+        File::deleteDirectory(app_path('Services'));
+    }
+
+    expect(File::exists(app_path('Services')))->toBeFalse();
+
+    Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    expect(File::exists(app_path('Services')))->toBeTrue();
+    expect(File::exists(app_path('Services/TestService')))->toBeTrue();
+});
+
+test('command displays summary after generation', function () {
+    $exitCode = Artisan::call('make:service-api', [
+        'name' => 'TestService',
+        '--no-interactive' => true,
+    ]);
+
+    $output = Artisan::output();
+
+    expect($exitCode)->toBe(0);
+    expect($output)->toContain('Creating service');
+});
