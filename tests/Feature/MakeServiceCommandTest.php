@@ -1136,3 +1136,109 @@ test('cachePreferences method does not write when disabled', function () {
 
     expect(File::exists($cachePath))->toBeFalse();
 });
+
+test('command skips controller generation when file already exists', function () {
+    // First run to create the controller
+    Artisan::call('make:service-api', [
+        'name' => 'SkipTest',
+        '--controller' => true,
+        '--no-interactive' => true,
+    ]);
+
+    $controllerPath = app_path('Http/Controllers/SkipTestController.php');
+    expect(File::exists($controllerPath))->toBeTrue();
+
+    // Modify the file to verify it's not overwritten
+    File::put($controllerPath, '<?php // Modified');
+
+    // Run again without force flag
+    Artisan::call('make:service-api', [
+        'name' => 'SkipTest',
+        '--controller' => true,
+        '--no-interactive' => true,
+    ]);
+
+    // File should still have our modification
+    expect(File::get($controllerPath))->toContain('// Modified');
+
+    // Cleanup
+    File::delete($controllerPath);
+    File::deleteDirectory(app_path('Services/SkipTest'));
+});
+
+test('command skips request generation when file already exists', function () {
+    // First run to create the request
+    Artisan::call('make:service-api', [
+        'name' => 'SkipRequest',
+        '--request' => true,
+        '--no-interactive' => true,
+    ]);
+
+    $requestPath = app_path('Http/Requests/SkipRequestRequest.php');
+    expect(File::exists($requestPath))->toBeTrue();
+
+    // Modify the file
+    File::put($requestPath, '<?php // Modified Request');
+
+    // Run again without force flag
+    Artisan::call('make:service-api', [
+        'name' => 'SkipRequest',
+        '--request' => true,
+        '--no-interactive' => true,
+    ]);
+
+    // File should still have our modification
+    expect(File::get($requestPath))->toContain('// Modified Request');
+
+    // Cleanup
+    File::delete($requestPath);
+    File::deleteDirectory(app_path('Services/SkipRequest'));
+});
+
+test('command skips resource generation when file already exists', function () {
+    // First run to create the resource
+    Artisan::call('make:service-api', [
+        'name' => 'SkipResource',
+        '--resource' => true,
+        '--no-interactive' => true,
+    ]);
+
+    $resourcePath = app_path('Http/Resources/SkipResourceResource.php');
+    expect(File::exists($resourcePath))->toBeTrue();
+
+    // Modify the file
+    File::put($resourcePath, '<?php // Modified Resource');
+
+    // Run again without force flag
+    Artisan::call('make:service-api', [
+        'name' => 'SkipResource',
+        '--resource' => true,
+        '--no-interactive' => true,
+    ]);
+
+    // File should still have our modification
+    expect(File::get($resourcePath))->toContain('// Modified Resource');
+
+    // Cleanup
+    File::delete($resourcePath);
+    File::deleteDirectory(app_path('Services/SkipResource'));
+});
+
+test('command warns when model already exists without force flag', function () {
+    // Create a model first
+    File::ensureDirectoryExists(app_path('Models'));
+    File::put(app_path('Models/ExistingModel.php'), '<?php namespace App\Models; class ExistingModel {}');
+
+    Artisan::call('make:service-api', [
+        'name' => 'ExistingModel',
+        '--model' => true,
+        '--no-interactive' => true,
+    ]);
+
+    $output = Artisan::output();
+    expect($output)->toContain('Model already exists');
+
+    // Cleanup
+    File::delete(app_path('Models/ExistingModel.php'));
+    File::deleteDirectory(app_path('Services/ExistingModel'));
+});
