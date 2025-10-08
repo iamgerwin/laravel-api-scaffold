@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\info;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\table;
@@ -122,7 +121,7 @@ class MakeServiceCommand extends Command
 
     protected function handleInteractive(): int
     {
-        info('🚀 Laravel API Scaffold - Interactive Mode');
+        $this->info('🚀 Laravel API Scaffold - Interactive Mode');
         $this->newLine();
 
         // Step 1: Select preset
@@ -249,7 +248,7 @@ class MakeServiceCommand extends Command
     protected function confirmGeneration(array $options): bool
     {
         $this->newLine();
-        info('📋 Generation Summary');
+        $this->info('📋 Generation Summary');
         $this->newLine();
 
         $filesToGenerate = [
