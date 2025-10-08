@@ -966,3 +966,173 @@ test('config has correct service path default', function () {
     expect($servicePath)->toContain('app');
     expect($servicePath)->toContain('Services');
 });
+
+test('getStub method loads package stubs correctly', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('getStub');
+    $method->setAccessible(true);
+
+    $stub = $method->invoke($command, 'service.stub');
+
+    expect($stub)->toBeString();
+    expect($stub)->toContain('namespace');
+});
+
+test('replaceStubPlaceholders method replaces variables correctly', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('replaceStubPlaceholders');
+    $method->setAccessible(true);
+
+    $stub = 'Hello {{ name }}, welcome to {{ place }}!';
+    $replacements = ['name' => 'John', 'place' => 'Laravel'];
+
+    $result = $method->invoke($command, $stub, $replacements);
+
+    expect($result)->toBe('Hello John, welcome to Laravel!');
+});
+
+test('fileExists method returns false for non-existent files', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('fileExists');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command, '/non/existent/file.php');
+
+    expect($result)->toBeFalse();
+});
+
+test('fileExists method handles existing files with force flag', function () {
+    config(['api-scaffold.backup_existing' => true]);
+
+    // Create a temporary file
+    $tempFile = app_path('Services/TempTest/temp.php');
+    $tempDir = dirname($tempFile);
+
+    if (! File::exists($tempDir)) {
+        File::makeDirectory($tempDir, 0755, true);
+    }
+
+    File::put($tempFile, '<?php');
+
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    // Set force option and output
+    $input = Mockery::mock(\Symfony\Component\Console\Input\InputInterface::class);
+    $input->shouldReceive('getOption')->with('force')->andReturn(true);
+
+    $output = Mockery::mock(\Symfony\Component\Console\Output\OutputInterface::class);
+    $output->shouldReceive('writeln')->andReturn(null);
+    $output->shouldReceive('write')->andReturn(null);
+    $output->shouldReceive('getVerbosity')->andReturn(\Symfony\Component\Console\Output\OutputInterface::VERBOSITY_NORMAL);
+
+    $reflection = new ReflectionClass($command);
+    $inputProperty = $reflection->getProperty('input');
+    $inputProperty->setAccessible(true);
+    $inputProperty->setValue($command, $input);
+
+    $outputProperty = $reflection->getProperty('output');
+    $outputProperty->setAccessible(true);
+    $outputProperty->setValue($command, $output);
+
+    $method = $reflection->getMethod('fileExists');
+    $method->setAccessible(true);
+
+    // Should return false (allowing overwrite) when force is true
+    $result = $method->invoke($command, $tempFile);
+
+    expect($result)->toBeFalse();
+
+    // Verify backup was created
+    $backupFiles = File::glob("{$tempFile}.backup.*");
+    expect(count($backupFiles))->toBeGreaterThan(0);
+
+    // Clean up
+    File::deleteDirectory(dirname($tempDir));
+});
+
+test('ensureDirectoryExists method creates directories recursively', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('ensureDirectoryExists');
+    $method->setAccessible(true);
+
+    $testPath = app_path('Services/TestDir/SubDir/TestFile.php');
+    $testDir = dirname($testPath);
+
+    // Ensure it doesn't exist
+    if (File::exists(app_path('Services/TestDir'))) {
+        File::deleteDirectory(app_path('Services/TestDir'));
+    }
+
+    expect(File::exists($testDir))->toBeFalse();
+
+    $method->invoke($command, $testPath);
+
+    expect(File::exists($testDir))->toBeTrue();
+
+    // Clean up
+    File::deleteDirectory(app_path('Services/TestDir'));
+});
+
+test('getCachedPreferences method returns cached data when available', function () {
+    config(['api-scaffold.cache_preferences' => true]);
+
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $cachePath = config('api-scaffold.preferences_cache_path');
+    $cacheDir = dirname($cachePath);
+
+    if (! File::exists($cacheDir)) {
+        File::makeDirectory($cacheDir, 0755, true);
+    }
+
+    // Create cache file
+    $cacheData = [
+        'preset' => 'api-complete',
+        'options' => ['api' => true, 'model' => true],
+        'updated_at' => now()->toIso8601String(),
+    ];
+
+    File::put($cachePath, json_encode($cacheData));
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('getCachedPreferences');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeArray();
+    expect($result['preset'])->toBe('api-complete');
+    expect($result['options']['api'])->toBeTrue();
+
+    // Clean up
+    File::delete($cachePath);
+});
+
+test('cachePreferences method does not write when disabled', function () {
+    config(['api-scaffold.cache_preferences' => false]);
+
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $cachePath = config('api-scaffold.preferences_cache_path');
+
+    // Ensure cache doesn't exist
+    if (File::exists($cachePath)) {
+        File::delete($cachePath);
+    }
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('cachePreferences');
+    $method->setAccessible(true);
+
+    $method->invoke($command, 'minimal', ['api' => false]);
+
+    expect(File::exists($cachePath))->toBeFalse();
+});
