@@ -7,6 +7,12 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\info;
+use function Laravel\Prompts\multiselect;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\table;
+
 class MakeServiceCommand extends Command
 {
     protected $signature = 'make:service-api {name}
@@ -18,7 +24,9 @@ class MakeServiceCommand extends Command
                             {--resource : Generate resource}
                             {--test : Generate test}
                             {--all : Generate all related files}
-                            {--force : Overwrite existing files}';
+                            {--force : Overwrite existing files}
+                            {--interactive : Force interactive mode}
+                            {--no-interactive : Disable interactive mode}';
 
     protected $description = 'Create a new service class with optional API scaffolding';
 
@@ -34,6 +42,11 @@ class MakeServiceCommand extends Command
     {
         $this->serviceName = $this->argument('name');
         $this->modelName = Str::studly($this->serviceName);
+
+        // Determine if we should use interactive mode
+        if ($this->shouldUseInteractiveMode()) {
+            return $this->handleInteractive();
+        }
 
         $this->info("Creating service: {$this->serviceName}");
 
@@ -73,6 +86,283 @@ class MakeServiceCommand extends Command
         }
 
         if ($generateAll || $this->option('test')) {
+            $this->generateTest();
+        }
+
+        $this->displaySummary();
+
+        return self::SUCCESS;
+    }
+
+    protected function shouldUseInteractiveMode(): bool
+    {
+        // Force interactive if --interactive flag is provided
+        if ($this->option('interactive')) {
+            return true;
+        }
+
+        // Disable interactive if --no-interactive flag is provided
+        if ($this->option('no-interactive')) {
+            return false;
+        }
+
+        // Check if any generation flags are provided
+        $hasFlags = $this->option('api')
+            || $this->option('model')
+            || $this->option('migration')
+            || $this->option('controller')
+            || $this->option('request')
+            || $this->option('resource')
+            || $this->option('test')
+            || $this->option('all');
+
+        // Use interactive mode if no flags and config allows
+        return ! $hasFlags && config('api-scaffold.interactive_mode', true);
+    }
+
+    protected function handleInteractive(): int
+    {
+        info('🚀 Laravel API Scaffold - Interactive Mode');
+        $this->newLine();
+
+        // Step 1: Select preset
+        $preset = $this->selectPreset();
+
+        // Step 2: Select or customize components
+        $options = $this->selectComponents($preset);
+
+        // Step 3: Preview and confirm
+        if (! $this->confirmGeneration($options)) {
+            $this->warn('Operation cancelled.');
+
+            return self::FAILURE;
+        }
+
+        // Step 4: Cache preferences if enabled
+        $this->cachePreferences($preset, $options);
+
+        // Step 5: Generate files
+        return $this->generateFromOptions($options);
+    }
+
+    protected function selectPreset(): string
+    {
+        $presets = config('api-scaffold.presets', []);
+        $cachedPreset = $this->getCachedPreferences()['preset'] ?? 'api-complete';
+
+        $choices = [];
+        foreach ($presets as $key => $preset) {
+            $choices[$key] = $preset['name'].' - '.$preset['description'];
+        }
+
+        return select(
+            label: 'Select a preset template',
+            options: $choices,
+            default: $cachedPreset
+        );
+    }
+
+    protected function selectComponents(string $preset): array
+    {
+        $presetConfig = config("api-scaffold.presets.{$preset}");
+        $options = $presetConfig['options'] ?? [];
+
+        // If custom preset, let user select components
+        if ($preset === 'custom' || empty($options)) {
+            $components = multiselect(
+                label: 'Select components to generate',
+                options: [
+                    'api' => 'API Methods (CRUD operations)',
+                    'model' => 'Model',
+                    'migration' => 'Migration',
+                    'controller' => 'Controller',
+                    'request' => 'Form Request',
+                    'resource' => 'API Resource',
+                    'test' => 'Feature Test',
+                ],
+                default: ['api', 'model', 'controller', 'request', 'resource', 'test']
+            );
+
+            // Convert array to boolean options
+            $options = [
+                'api' => in_array('api', $components),
+                'model' => in_array('model', $components),
+                'migration' => in_array('migration', $components),
+                'controller' => in_array('controller', $components),
+                'request' => in_array('request', $components),
+                'resource' => in_array('resource', $components),
+                'test' => in_array('test', $components),
+            ];
+        } else {
+            // For predefined presets, show what will be generated and allow confirmation
+            $this->newLine();
+            $this->info("The '{$presetConfig['name']}' preset will generate:");
+            foreach ($options as $component => $enabled) {
+                if ($enabled) {
+                    $this->line('  ✓ '.ucfirst($component));
+                }
+            }
+            $this->newLine();
+
+            $customize = confirm(
+                label: 'Would you like to customize the components?',
+                default: false
+            );
+
+            if ($customize) {
+                $defaultComponents = [];
+                foreach ($options as $component => $enabled) {
+                    if ($enabled) {
+                        $defaultComponents[] = $component;
+                    }
+                }
+
+                $components = multiselect(
+                    label: 'Select components to generate',
+                    options: [
+                        'api' => 'API Methods (CRUD operations)',
+                        'model' => 'Model',
+                        'migration' => 'Migration',
+                        'controller' => 'Controller',
+                        'request' => 'Form Request',
+                        'resource' => 'API Resource',
+                        'test' => 'Feature Test',
+                    ],
+                    default: $defaultComponents
+                );
+
+                $options = [
+                    'api' => in_array('api', $components),
+                    'model' => in_array('model', $components),
+                    'migration' => in_array('migration', $components),
+                    'controller' => in_array('controller', $components),
+                    'request' => in_array('request', $components),
+                    'resource' => in_array('resource', $components),
+                    'test' => in_array('test', $components),
+                ];
+            }
+        }
+
+        return $options;
+    }
+
+    protected function confirmGeneration(array $options): bool
+    {
+        $this->newLine();
+        info('📋 Generation Summary');
+        $this->newLine();
+
+        $filesToGenerate = [
+            ['Component', 'Will Generate'],
+            ['Service', '✓'],
+            ['Interface', '✓'],
+        ];
+
+        foreach ($options as $component => $enabled) {
+            if ($enabled) {
+                $filesToGenerate[] = [ucfirst($component), '✓'];
+            }
+        }
+
+        table(
+            headers: ['Component', 'Status'],
+            rows: array_slice($filesToGenerate, 1)
+        );
+
+        $this->newLine();
+
+        return confirm(
+            label: 'Proceed with generation?',
+            default: true
+        );
+    }
+
+    protected function getCachedPreferences(): array
+    {
+        if (! config('api-scaffold.cache_preferences', true)) {
+            return [];
+        }
+
+        $cachePath = config('api-scaffold.preferences_cache_path');
+
+        if (! File::exists($cachePath)) {
+            return [];
+        }
+
+        try {
+            $content = File::get($cachePath);
+
+            return json_decode($content, true) ?? [];
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    protected function cachePreferences(string $preset, array $options): void
+    {
+        if (! config('api-scaffold.cache_preferences', true)) {
+            return;
+        }
+
+        $cachePath = config('api-scaffold.preferences_cache_path');
+        $cacheDir = dirname($cachePath);
+
+        if (! File::exists($cacheDir)) {
+            File::makeDirectory($cacheDir, 0755, true);
+        }
+
+        $preferences = [
+            'preset' => $preset,
+            'options' => $options,
+            'updated_at' => now()->toIso8601String(),
+        ];
+
+        File::put($cachePath, json_encode($preferences, JSON_PRETTY_PRINT));
+    }
+
+    protected function generateFromOptions(array $options): int
+    {
+        $this->newLine();
+        $this->info("Creating service: {$this->serviceName}");
+
+        // Create service directory structure
+        $this->createServiceDirectory();
+
+        // Generate service files
+        if ($options['api']) {
+            // Temporarily set the api option
+            $this->input->setOption('api', true);
+        }
+        $this->generateService();
+        $this->generateInterface();
+
+        // Register service binding
+        if (config('api-scaffold.auto_register_bindings', true)) {
+            $this->registerServiceBinding();
+        }
+
+        // Generate related files based on options
+        if ($options['model']) {
+            $this->generateModel();
+        }
+
+        if ($options['migration']) {
+            $this->generateMigration();
+        }
+
+        if ($options['controller']) {
+            $this->generateController();
+        }
+
+        if ($options['request']) {
+            $this->generateRequest();
+        }
+
+        if ($options['resource']) {
+            $this->generateResource();
+        }
+
+        if ($options['test']) {
             $this->generateTest();
         }
 
