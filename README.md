@@ -11,6 +11,8 @@ Laravel API Scaffold automates the creation of service-oriented architecture com
 - 🏗️ **Service Layer Architecture**: Automatically generates service classes with their interfaces
 - 🔌 **Dependency Injection**: Auto-registers service bindings in AppServiceProvider
 - 🎯 **Complete API Scaffolding**: Creates Models, Migrations, Controllers, Requests, and Resources
+- 🚀 **Laravel 11+ API Setup**: Automatically runs `php artisan install:api` for Laravel 11+ projects
+- 🛣️ **Interactive Route Management**: Choose to append routes to api.php or create separate route files
 - 🧪 **Testing Ready**: Generates Pest/PHPUnit test files with common test cases
 - ⚙️ **Highly Configurable**: Customize paths, namespaces, and generation options
 - 🔒 **Safe Operations**: Automatic backups of existing files before modifications
@@ -79,6 +81,64 @@ php artisan make:service-api Product --interactive
 # Disable interactive mode (use flags instead)
 php artisan make:service-api Product --no-interactive --all
 ```
+
+### Automatic Laravel 11+ API Setup
+
+When using Laravel 11 or higher, the package automatically detects if your project needs API scaffolding:
+
+- **Auto-detection**: Checks if `routes/api.php` exists
+- **Auto-installation**: Runs `php artisan install:api` if needed
+- **Seamless setup**: Installs Laravel Sanctum and sets up API routes automatically
+
+This ensures your Laravel 11+ project is properly configured for API development without manual intervention.
+
+### Interactive Route Management
+
+After generating a controller, the package offers an interactive prompt to add routes for your new resource:
+
+```bash
+Would you like to add API routes for this resource? (yes/no)
+```
+
+You can choose between two route management strategies:
+
+#### Option 1: Append to routes/api.php
+Routes are added directly to your main API routes file:
+
+```php
+// Product API Routes
+Route::apiResource('products', ProductController::class);
+```
+
+**Best for:**
+- Small to medium projects
+- Quick prototyping
+- Simple API structures
+
+#### Option 2: Create separate route file
+Creates a dedicated route file at `routes/api/{model}.php`:
+
+```php
+<?php
+
+use App\Http\Controllers\ProductController;
+use Illuminate\Support\Facades\Route;
+
+// Product API Routes
+Route::apiResource('products', ProductController::class);
+```
+
+And automatically includes it in `routes/api.php`:
+
+```php
+require __DIR__.'/api/product.php';
+```
+
+**Best for:**
+- Large projects with many resources
+- Better organization and separation of concerns
+- Team collaboration (reduces merge conflicts)
+- Modular API design
 
 ### Basic Usage
 
