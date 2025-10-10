@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2025-10-10
+
+### Fixed
+- Laravel 12 compatibility: Updated `laravel/prompts` constraint to support both `^0.1.0` (Laravel 10/11) and `^0.3.0` (Laravel 12)
+
 ## [0.2.1] - 2025-10-10
 
 ### Added
@@ -138,7 +143,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.1...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.2...HEAD
+[0.2.2]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.4...0.2.0
 [0.1.4]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.3...0.1.4
