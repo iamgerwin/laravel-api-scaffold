@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-10-10
+
 ### Added
 - **Laravel 11+ API Auto-Setup**: Automatically detects Laravel 11+ and runs `php artisan install:api` if routes/api.php doesn't exist (addresses #4)
   - Intelligent version detection to ensure compatibility
@@ -19,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Create separate route files in `routes/api/{model}.php` with auto-include
   - Smart conflict detection to prevent duplicate routes
   - Uses Laravel's `Route::apiResource()` for RESTful endpoints
+
+### Fixed
+- Controller stub now uses service interface instead of concrete service class for proper dependency injection
 
 ### Improved
 - Enhanced developer experience with automatic API setup for modern Laravel versions
@@ -133,7 +138,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.1...HEAD
+[0.2.1]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.4...0.2.0
 [0.1.4]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.3...0.1.4
 [0.1.3]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.2...0.1.3
