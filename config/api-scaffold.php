@@ -180,6 +180,21 @@ return [
                 'test' => true,
             ],
         ],
+        'api-complete-admin' => [
+            'name' => 'API Complete + Admin Panel',
+            'description' => 'Full API scaffold with admin panel resource',
+            'options' => [
+                'api' => true,
+                'model' => true,
+                'migration' => true,
+                'controller' => true,
+                'request' => true,
+                'resource' => true,
+                'test' => true,
+                'admin' => true,
+                'docs' => true,
+            ],
+        ],
         'custom' => [
             'name' => 'Custom',
             'description' => 'Choose components individually',
@@ -209,5 +224,55 @@ return [
     */
 
     'preferences_cache_path' => storage_path('app/api-scaffold-preferences.json'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Panel Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure admin panel resource generation for Laravel Nova and Filament.
+    | The package will auto-detect installed admin panels and offer to generate
+    | resources accordingly.
+    |
+    */
+
+    'admin_panel' => [
+        'enabled' => true,
+        'auto_detect' => true,
+        'default' => null, // 'nova', 'filament', or null
+
+        'nova' => [
+            'enabled' => true,
+            'namespace' => 'App\\Nova',
+            'path' => app_path('Nova'),
+        ],
+
+        'filament' => [
+            'enabled' => true,
+            'namespace' => 'App\\Filament\\Resources',
+            'path' => app_path('Filament/Resources'),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Entity Documentation
+    |--------------------------------------------------------------------------
+    |
+    | Automatically generate documentation for each scaffolded entity.
+    | Documentation includes model schema, relationships, API endpoints,
+    | and admin panel configuration.
+    |
+    */
+
+    'documentation' => [
+        'enabled' => true,
+        'path' => base_path('docs/entities'),
+        'format' => 'markdown',
+        'include_relationships' => true,
+        'include_api_endpoints' => true,
+        'include_admin_panel' => true,
+        'include_service_methods' => true,
+    ],
 
 ];
