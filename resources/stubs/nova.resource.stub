@@ -2,7 +2,6 @@
 
 namespace {{ namespace }};
 
-use {{ modelNamespace }}\{{ modelClass }};
 use Laravel\Nova\Fields\ID;
 {{ fieldImports }}
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -13,9 +12,9 @@ class {{ className }} extends Resource
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<{{ modelClass }}>
+     * @var class-string<{{ modelNamespace }}\{{ modelClass }}>
      */
-    public static $model = {{ modelClass }}::class;
+    public static $model = {{ modelNamespace }}\{{ modelClass }}::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.

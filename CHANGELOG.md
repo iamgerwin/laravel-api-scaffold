@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2025-10-11
+
+### Fixed
+- Nova resource generation: Fixed namespace conflict when resource name matches model name by using fully qualified class names instead of importing model class
+
+### Improved
+- Test coverage: Added test to verify Nova resource namespace conflict fix, now at 114 tests passing with 276 assertions
+
 ## [0.3.2] - 2025-10-11
 
 ### Improved
@@ -204,7 +212,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.2...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.3...HEAD
+[0.3.3]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.2...0.3.3
 [0.3.2]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.1...0.3.2
 [0.3.1]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.3...0.3.0
