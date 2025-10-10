@@ -1535,3 +1535,308 @@ test('isFilamentInstalled returns boolean', function () {
 
     expect($result)->toBeBool();
 });
+
+test('command with admin flag warns when no admin panel detected', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'AdminTest',
+        '--admin' => true,
+        '--no-interactive' => true,
+    ]);
+
+    $output = Artisan::output();
+    expect($output)->toContain('No admin panel detected');
+
+    // Cleanup
+    File::deleteDirectory(app_path('Services/AdminTest'));
+});
+
+test('command with docs flag generates entity documentation', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'DocTest',
+        '--docs' => true,
+        '--no-interactive' => true,
+    ]);
+
+    $docsPath = base_path('docs/entities/DocTest.md');
+    expect(File::exists($docsPath))->toBeTrue();
+
+    $content = File::get($docsPath);
+    expect($content)->toContain('DocTest Entity Documentation');
+    expect($content)->toContain('Auto-generated documentation');
+
+    // Cleanup
+    File::delete($docsPath);
+    File::deleteDirectory(app_path('Services/DocTest'));
+});
+
+test('documentation includes model information', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'Product',
+        '--docs' => true,
+        '--no-interactive' => true,
+    ]);
+
+    $docsPath = base_path('docs/entities/Product.md');
+    $content = File::get($docsPath);
+
+    expect($content)->toContain('Product Entity Documentation');
+    expect($content)->toContain('Database Schema');
+    expect($content)->toContain('API Endpoints');
+    expect($content)->toContain('Service Layer');
+
+    // Cleanup
+    File::delete($docsPath);
+    File::deleteDirectory(app_path('Services/Product'));
+});
+
+test('documentation skips existing files without force flag', function () {
+    // First generation
+    Artisan::call('make:service-api', [
+        'name' => 'SkipDoc',
+        '--docs' => true,
+        '--no-interactive' => true,
+    ]);
+
+    $docsPath = base_path('docs/entities/SkipDoc.md');
+    expect(File::exists($docsPath))->toBeTrue();
+
+    // Modify the file
+    File::put($docsPath, '# Modified Documentation');
+
+    // Try to generate again without force
+    Artisan::call('make:service-api', [
+        'name' => 'SkipDoc',
+        '--docs' => true,
+        '--no-interactive' => true,
+    ]);
+
+    // Should still have our modification
+    expect(File::get($docsPath))->toContain('# Modified Documentation');
+
+    // Cleanup
+    File::delete($docsPath);
+    File::deleteDirectory(app_path('Services/SkipDoc'));
+});
+
+test('determineAdminPanel returns null when no admin panels installed', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+
+    // Mock input to not have admin flags
+    $input = Mockery::mock(\Symfony\Component\Console\Input\InputInterface::class);
+    $input->shouldReceive('getOption')->with('nova')->andReturn(false);
+    $input->shouldReceive('getOption')->with('filament')->andReturn(false);
+    $input->shouldReceive('getOption')->with('admin')->andReturn(true);
+
+    $formatter = Mockery::mock(\Symfony\Component\Console\Formatter\OutputFormatterInterface::class);
+    $formatter->shouldReceive('hasStyle')->andReturn(false);
+    $formatter->shouldReceive('setStyle')->andReturn(null);
+
+    $output = Mockery::mock(\Symfony\Component\Console\Output\OutputInterface::class);
+    $output->shouldReceive('writeln')->andReturn(null);
+    $output->shouldReceive('write')->andReturn(null);
+    $output->shouldReceive('getVerbosity')->andReturn(32);
+    $output->shouldReceive('getFormatter')->andReturn($formatter);
+
+    $inputProperty = $reflection->getProperty('input');
+    $inputProperty->setAccessible(true);
+    $inputProperty->setValue($command, $input);
+
+    $outputProperty = $reflection->getProperty('output');
+    $outputProperty->setAccessible(true);
+    $outputProperty->setValue($command, $output);
+
+    $method = $reflection->getMethod('determineAdminPanel');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeNull();
+
+    Mockery::close();
+});
+
+test('generateFieldsList returns default fields structure', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('generateFieldsList');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeString();
+    expect($result)->toContain('| Field | Type | Description |');
+    expect($result)->toContain('| id | bigInteger | Primary key |');
+});
+
+test('generateRelationshipsList returns default message', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('generateRelationshipsList');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeString();
+    expect($result)->toContain('No relationships defined yet');
+});
+
+test('generateExamplePayload returns placeholder', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('generateExamplePayload');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeString();
+    expect($result)->toContain('Add your fields here');
+});
+
+test('generateValidationRulesDoc returns placeholder', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+
+    // Set the modelName property first
+    $modelProperty = $reflection->getProperty('modelName');
+    $modelProperty->setAccessible(true);
+    $modelProperty->setValue($command, 'TestModel');
+
+    $method = $reflection->getMethod('generateValidationRulesDoc');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeString();
+    expect($result)->toContain('Add validation rules');
+});
+
+test('generateAdminPanelDocSection returns empty when no admin panel', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+
+    // Mock input to not have admin flags
+    $input = Mockery::mock(\Symfony\Component\Console\Input\InputInterface::class);
+    $input->shouldReceive('getOption')->with('nova')->andReturn(false);
+    $input->shouldReceive('getOption')->with('filament')->andReturn(false);
+
+    $inputProperty = $reflection->getProperty('input');
+    $inputProperty->setAccessible(true);
+    $inputProperty->setValue($command, $input);
+
+    $method = $reflection->getMethod('generateAdminPanelDocSection');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBe('');
+
+    Mockery::close();
+});
+
+test('command with all flag does not generate admin panel when disabled', function () {
+    config(['api-scaffold.admin_panel.enabled' => false]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'NoAdmin',
+        '--all' => true,
+    ]);
+
+    // Admin panel resources should not be generated
+    expect(File::exists(app_path('Nova/NoAdmin.php')))->toBeFalse();
+    expect(File::exists(app_path('Filament/Resources/NoAdminResource.php')))->toBeFalse();
+
+    // Cleanup
+    File::deleteDirectory(app_path('Services/NoAdmin'));
+    if (File::exists(app_path('Models/NoAdmin.php'))) {
+        File::delete(app_path('Models/NoAdmin.php'));
+    }
+    if (File::exists(app_path('Http/Controllers/NoAdminController.php'))) {
+        File::delete(app_path('Http/Controllers/NoAdminController.php'));
+    }
+    if (File::exists(app_path('Http/Requests/NoAdminRequest.php'))) {
+        File::delete(app_path('Http/Requests/NoAdminRequest.php'));
+    }
+    if (File::exists(app_path('Http/Resources/NoAdminResource.php'))) {
+        File::delete(app_path('Http/Resources/NoAdminResource.php'));
+    }
+
+    // Reset config
+    config(['api-scaffold.admin_panel.enabled' => true]);
+});
+
+test('command with all flag does not generate docs when disabled', function () {
+    config(['api-scaffold.documentation.enabled' => false]);
+
+    Artisan::call('make:service-api', [
+        'name' => 'NoDocs',
+        '--all' => true,
+    ]);
+
+    // Documentation should not be generated
+    $docsPath = base_path('docs/entities/NoDocs.md');
+    expect(File::exists($docsPath))->toBeFalse();
+
+    // Cleanup
+    File::deleteDirectory(app_path('Services/NoDocs'));
+    if (File::exists(app_path('Models/NoDocs.php'))) {
+        File::delete(app_path('Models/NoDocs.php'));
+    }
+    if (File::exists(app_path('Http/Controllers/NoDocsController.php'))) {
+        File::delete(app_path('Http/Controllers/NoDocsController.php'));
+    }
+    if (File::exists(app_path('Http/Requests/NoDocsRequest.php'))) {
+        File::delete(app_path('Http/Requests/NoDocsRequest.php'));
+    }
+    if (File::exists(app_path('Http/Resources/NoDocsResource.php'))) {
+        File::delete(app_path('Http/Resources/NoDocsResource.php'));
+    }
+
+    // Reset config
+    config(['api-scaffold.documentation.enabled' => true]);
+});
+
+test('generateNovaFields returns basic field comment', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('generateNovaFields');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeString();
+    expect($result)->toContain('//');
+});
+
+test('generateFilamentFormFields returns basic field comment', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('generateFilamentFormFields');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeString();
+    expect($result)->toContain('//');
+});
+
+test('generateFilamentTableColumns returns basic column comment', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('generateFilamentTableColumns');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeString();
+    expect($result)->toContain('//');
+});
