@@ -1352,3 +1352,122 @@ test('registerServiceBinding handles provider with alternative register signatur
     // Reset config
     config(['api-scaffold.provider_path' => app_path('Providers/AppServiceProvider.php')]);
 });
+
+// Laravel 11+ Feature Tests
+test('getLaravelVersion returns current Laravel version', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('getLaravelVersion');
+    $method->setAccessible(true);
+
+    $version = $method->invoke($command);
+
+    expect($version)->toBeString();
+    expect($version)->toMatch('/^\d+\.\d+/');
+});
+
+test('generateRouteLinesOnly generates correct route syntax', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    // Set the modelName property
+    $reflection = new ReflectionClass($command);
+    $modelProperty = $reflection->getProperty('modelName');
+    $modelProperty->setAccessible(true);
+    $modelProperty->setValue($command, 'Product');
+
+    $method = $reflection->getMethod('generateRouteLinesOnly');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toContain('Product API Routes');
+    expect($result)->toContain("Route::apiResource('products', ProductController::class)");
+});
+
+test('generateRouteContent generates complete route file', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    // Set the modelName property
+    $reflection = new ReflectionClass($command);
+    $modelProperty = $reflection->getProperty('modelName');
+    $modelProperty->setAccessible(true);
+    $modelProperty->setValue($command, 'Product');
+
+    $method = $reflection->getMethod('generateRouteContent');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toContain('<?php');
+    expect($result)->toContain('use App\Http\Controllers\ProductController');
+    expect($result)->toContain('use Illuminate\Support\Facades\Route');
+    expect($result)->toContain("Route::apiResource('products', ProductController::class)");
+});
+
+test('controller stub uses service interface instead of concrete class', function () {
+    Artisan::call('make:service-api', [
+        'name' => 'Product',
+        '--controller' => true,
+        '--no-interactive' => true,
+    ]);
+
+    $controllerPath = app_path('Http/Controllers/ProductController.php');
+    $content = File::get($controllerPath);
+
+    // Should use the interface, not the concrete service class
+    expect($content)->toContain('ProductServiceInterface');
+    expect($content)->not->toContain('use App\Services\Product\ProductService;');
+
+    // Cleanup
+    File::delete($controllerPath);
+    File::deleteDirectory(app_path('Services/Product'));
+});
+
+test('controller property tracks if controller was generated', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $property = $reflection->getProperty('controllerGenerated');
+    $property->setAccessible(true);
+
+    // Default should be false
+    $value = $property->getValue($command);
+    expect($value)->toBeFalse();
+});
+
+test('generateRouteContent uses kebab-case for route names', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $modelProperty = $reflection->getProperty('modelName');
+    $modelProperty->setAccessible(true);
+    $modelProperty->setValue($command, 'UserProfile');
+
+    $method = $reflection->getMethod('generateRouteContent');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    // Should use kebab-case for route names
+    expect($result)->toContain("'user-profiles'");
+    expect($result)->toContain('UserProfileController');
+});
+
+test('generateRouteLinesOnly pluralizes model name for route', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $modelProperty = $reflection->getProperty('modelName');
+    $modelProperty->setAccessible(true);
+    $modelProperty->setValue($command, 'Category');
+
+    $method = $reflection->getMethod('generateRouteLinesOnly');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    // Should pluralize the model name
+    expect($result)->toContain("'categories'");
+    expect($result)->toContain('CategoryController');
+});
