@@ -210,6 +210,48 @@ Overwrite existing files (creates backups automatically):
 php artisan make:service-api Comment --force
 ```
 
+### Admin Panel Integration
+
+Generate admin panel resources for Laravel Nova or Filament:
+
+```bash
+# Generate Nova resource
+php artisan make:service-api Product --nova
+
+# Generate Filament resource
+php artisan make:service-api Product --filament
+
+# Auto-detect and generate for available admin panel
+php artisan make:service-api Product --admin
+```
+
+The package automatically detects which admin panel is installed (Nova or Filament) and generates the appropriate resource files. The `--admin` flag will use the configured default admin panel or prompt you to choose if both are installed.
+
+**Generated Nova Resource:**
+- `app/Nova/Product.php` - Nova resource with basic field configuration
+
+**Generated Filament Resources:**
+- `app/Filament/Resources/ProductResource.php` - Main resource file
+- `app/Filament/Resources/ProductResource/Pages/ListProduct.php` - List page
+- `app/Filament/Resources/ProductResource/Pages/CreateProduct.php` - Create page
+- `app/Filament/Resources/ProductResource/Pages/EditProduct.php` - Edit page
+
+### Entity Documentation
+
+Auto-generate comprehensive markdown documentation for your entities:
+
+```bash
+php artisan make:service-api Product --docs
+```
+
+This creates `docs/entities/Product.md` with:
+- Model overview and database schema
+- Relationships documentation
+- API endpoint documentation
+- Service layer documentation
+- Admin panel integration details
+- Validation rules documentation
+
 ## Configuration
 
 The configuration file allows you to customize various aspects of the package:
@@ -551,7 +593,7 @@ If you encounter a bug or have a feature request, please submit an issue on GitH
 **Environment:**
 - Laravel: 11.x
 - PHP: 8.3
-- Package: 0.1.4
+- Package: 0.3.3
 
 **Steps to Reproduce:**
 1. Run `php artisan make:service-api Post --all`
