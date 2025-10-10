@@ -1,21 +1,21 @@
 <?php
 
-namespace {{namespace}};
+namespace {{ namespace }};
 
-use {{modelNamespace}}\{{modelClass}};
+use {{ modelNamespace }}\{{ modelClass }};
 use Laravel\Nova\Fields\ID;
-{{fieldImports}}
+{{ fieldImports }}
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Resource;
 
-class {{className}} extends Resource
+class {{ className }} extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<{{modelClass}}>
+     * @var class-string<{{ modelClass }}>
      */
-    public static $model = {{modelClass}}::class;
+    public static $model = {{ modelClass }}::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -43,7 +43,7 @@ class {{className}} extends Resource
     {
         return [
             ID::make()->sortable(),
-{{fields}}
+{{ fields }}
         ];
     }
 
