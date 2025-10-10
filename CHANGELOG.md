@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Laravel 11+ API Auto-Setup**: Automatically detects Laravel 11+ and runs `php artisan install:api` if routes/api.php doesn't exist (addresses #4)
+  - Intelligent version detection to ensure compatibility
+  - Automatic Sanctum installation and API route setup
+  - Seamless integration without manual intervention
+- **Interactive Route Management**: New workflow for adding API routes after controller generation (addresses #4)
+  - Interactive prompt asking if routes should be added
+  - Two route organization strategies:
+    - Append routes directly to `routes/api.php`
+    - Create separate route files in `routes/api/{model}.php` with auto-include
+  - Smart conflict detection to prevent duplicate routes
+  - Uses Laravel's `Route::apiResource()` for RESTful endpoints
+
+### Improved
+- Enhanced developer experience with automatic API setup for modern Laravel versions
+- Better project organization with flexible route management options
+- Reduced manual setup steps for API development
+- Documentation updated with comprehensive guides for new features
+
 ## [0.2.0] - 2025-10-09
 
 ### Added

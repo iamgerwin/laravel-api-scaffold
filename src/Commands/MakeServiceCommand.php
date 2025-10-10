@@ -37,6 +37,8 @@ class MakeServiceCommand extends Command
 
     protected array $createdFiles = [];
 
+    protected bool $controllerGenerated = false;
+
     public function handle(): int
     {
         $this->serviceName = $this->argument('name');
@@ -89,6 +91,12 @@ class MakeServiceCommand extends Command
         }
 
         $this->displaySummary();
+
+        // Setup API routes for Laravel 11+
+        $this->setupApiRoutes();
+
+        // Handle route generation
+        $this->handleRouteGeneration();
 
         return self::SUCCESS;
     }
@@ -382,6 +390,12 @@ class MakeServiceCommand extends Command
 
         $this->displaySummary();
 
+        // Setup API routes for Laravel 11+
+        $this->setupApiRoutes();
+
+        // Handle route generation
+        $this->handleRouteGeneration();
+
         return self::SUCCESS;
     }
 
@@ -477,6 +491,7 @@ class MakeServiceCommand extends Command
         $this->ensureDirectoryExists($filePath);
         File::put($filePath, $content);
         $this->createdFiles[] = $filePath;
+        $this->controllerGenerated = true;
         $this->info("Created controller: {$filePath}");
     }
 
@@ -706,6 +721,176 @@ class MakeServiceCommand extends Command
         if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
+    }
+
+    protected function setupApiRoutes(): void
+    {
+        // Check if Laravel version is 11 or higher
+        $laravelVersion = $this->getLaravelVersion();
+
+        if (version_compare($laravelVersion, '11.0', '<')) {
+            return;
+        }
+
+        // Check if API routes already exist
+        $apiRoutesPath = base_path('routes/api.php');
+
+        if (File::exists($apiRoutesPath)) {
+            return;
+        }
+
+        $this->newLine();
+        $this->info('📦 Laravel 11+ detected - Setting up API routes...');
+
+        try {
+            Artisan::call('install:api', [], $this->getOutput());
+            $this->info('✓ API routes installed successfully');
+        } catch (\Exception $e) {
+            $this->warn('⚠ Could not install API routes automatically. Please run: php artisan install:api');
+        }
+    }
+
+    protected function getLaravelVersion(): string
+    {
+        return app()->version();
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    protected function handleRouteGeneration(): void
+    {
+        // Only offer route generation if controller was created
+        if (! $this->controllerGenerated) {
+            return;
+        }
+
+        // Check if routes/api.php exists
+        $apiRoutesPath = base_path('routes/api.php');
+
+        if (! File::exists($apiRoutesPath)) {
+            $this->warn('⚠ routes/api.php not found. Please create API routes first.');
+
+            return;
+        }
+
+        $this->newLine();
+
+        // Ask if user wants to add routes
+        $addRoutes = confirm(
+            label: 'Would you like to add API routes for this resource?',
+            default: true
+        );
+
+        if (! $addRoutes) {
+            return;
+        }
+
+        // Ask for route generation method
+        $method = select(
+            label: 'How would you like to manage the routes?',
+            options: [
+                'append' => 'Append to routes/api.php',
+                'separate' => "Create separate file routes/api/{$this->modelName}.php",
+            ],
+            default: 'append'
+        );
+
+        if ($method === 'separate') {
+            $this->createSeparateRouteFile();
+        } else {
+            $this->appendToApiRoutes();
+        }
+    }
+
+    protected function createSeparateRouteFile(): void
+    {
+        $routeFileName = Str::snake($this->modelName);
+        $routeFilePath = base_path("routes/api/{$routeFileName}.php");
+
+        // Ensure directory exists
+        $this->ensureDirectoryExists($routeFilePath);
+
+        // Generate route content
+        $routeContent = $this->generateRouteContent();
+
+        // Write the route file
+        File::put($routeFilePath, $routeContent);
+
+        $this->info("✓ Created route file: routes/api/{$routeFileName}.php");
+
+        // Add include statement to api.php
+        $this->addRouteInclude($routeFileName);
+    }
+
+    protected function appendToApiRoutes(): void
+    {
+        $apiRoutesPath = base_path('routes/api.php');
+        $currentContent = File::get($apiRoutesPath);
+
+        // Generate route lines
+        $routeLines = $this->generateRouteLinesOnly();
+
+        // Check if routes already exist
+        $controllerName = "{$this->modelName}Controller";
+        if (Str::contains($currentContent, $controllerName)) {
+            $this->warn("⚠ Routes for {$controllerName} may already exist in routes/api.php");
+
+            return;
+        }
+
+        // Append routes
+        $newContent = rtrim($currentContent)."\n\n".$routeLines;
+        File::put($apiRoutesPath, $newContent);
+
+        $this->info('✓ Routes added to routes/api.php');
+    }
+
+    protected function addRouteInclude(string $routeFileName): void
+    {
+        $apiRoutesPath = base_path('routes/api.php');
+        $currentContent = File::get($apiRoutesPath);
+
+        $includeLine = "require __DIR__.'/api/{$routeFileName}.php';";
+
+        // Check if include already exists
+        if (Str::contains($currentContent, $includeLine)) {
+            return;
+        }
+
+        // Add include at the end
+        $newContent = rtrim($currentContent)."\n{$includeLine}\n";
+        File::put($apiRoutesPath, $newContent);
+
+        $this->info('✓ Added route include to routes/api.php');
+    }
+
+    protected function generateRouteContent(): string
+    {
+        $controllerName = "{$this->modelName}Controller";
+        $controllerNamespace = config('api-scaffold.namespaces.controller', 'App\\Http\\Controllers');
+        $routeName = Str::kebab(Str::plural($this->modelName));
+
+        return <<<PHP
+<?php
+
+use {$controllerNamespace}\\{$controllerName};
+use Illuminate\Support\Facades\Route;
+
+{$this->generateRouteLinesOnly()}
+
+PHP;
+    }
+
+    protected function generateRouteLinesOnly(): string
+    {
+        $controllerName = "{$this->modelName}Controller";
+        $routeName = Str::kebab(Str::plural($this->modelName));
+
+        return <<<PHP
+// {$this->modelName} API Routes
+Route::apiResource('{$routeName}', {$controllerName}::class);
+PHP;
     }
 
     protected function displaySummary(): void

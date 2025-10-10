@@ -2,7 +2,7 @@
 
 namespace {{ namespace }};
 
-use {{ serviceNamespace }}\{{ service }};
+use {{ serviceNamespace }}\{{ serviceInterface }};
 use {{ requestNamespace }}\{{ request }};
 use {{ resourceNamespace }}\{{ resource }};
 use Illuminate\Http\JsonResponse;
