@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.6] - 2025-10-11
+
+### Fixed
+- Interactive Route Management UX: Improved user experience by showing route generation prompts BEFORE the summary display
+  - Route prompts now appear immediately after file generation, before the "Next steps" summary
+  - Summary "Next steps" now conditionally shows/hides the "Add routes" step based on whether routes were automatically generated
+  - Users will no longer see confusing "Add routes manually" message when routes were already added through the interactive prompt
+  - Better workflow ensures users know routes are set up before seeing the summary
+
+### Improved
+- Command flow: Route generation now happens before displaying the final summary for better clarity
+- Next steps guidance: Dynamically adjusted based on what was actually generated
+- All 114 tests passing with 276 assertions
+
 ## [0.3.5] - 2025-10-11
 
 ### Fixed
@@ -235,7 +249,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.5...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.6...HEAD
+[0.3.6]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.5...0.3.6
 [0.3.5]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.4...0.3.5
 [0.3.4]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.3...0.3.4
 [0.3.3]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.2...0.3.3
