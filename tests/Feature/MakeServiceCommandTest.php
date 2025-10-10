@@ -2108,7 +2108,7 @@ test('command with nova flag generates Nova resource', function () {
 
     $content = File::get($novaPath);
     expect($content)->toContain('class NovaTest extends Resource');
-    expect($content)->toContain('public static $model = App\Models\NovaTest::class');
+    expect($content)->toContain('public static $model = \App\Models\NovaTest::class');
 
     // Cleanup
     File::delete($novaPath);
@@ -2132,11 +2132,11 @@ test('nova resource uses fully qualified class name to avoid namespace conflict'
     // Should NOT have use statement for model
     expect($content)->not->toContain('use App\Models\Car;');
 
-    // Should use fully qualified class name
-    expect($content)->toContain('public static $model = App\Models\Car::class;');
+    // Should use fully qualified class name with leading backslash
+    expect($content)->toContain('public static $model = \App\Models\Car::class;');
 
-    // Should have correct PHPDoc
-    expect($content)->toContain('@var class-string<App\Models\Car>');
+    // Should have correct PHPDoc with leading backslash
+    expect($content)->toContain('@var class-string<\App\Models\Car>');
 
     // Cleanup
     File::delete($novaPath);

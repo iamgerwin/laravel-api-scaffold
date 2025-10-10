@@ -12,9 +12,9 @@ class {{ className }} extends Resource
     /**
      * The model the resource corresponds to.
      *
-     * @var class-string<{{ modelNamespace }}\{{ modelClass }}>
+     * @var class-string<\{{ modelNamespace }}\{{ modelClass }}>
      */
-    public static $model = {{ modelNamespace }}\{{ modelClass }}::class;
+    public static $model = \{{ modelNamespace }}\{{ modelClass }}::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
