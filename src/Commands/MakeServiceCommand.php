@@ -512,6 +512,10 @@ class MakeServiceCommand extends Command
         $controllerName = "{$this->modelName}Controller";
         $filePath = app_path("Http/Controllers/{$controllerName}.php");
 
+        // Mark controller as generated/requested for route handling
+        // This ensures route prompts appear even if controller already exists
+        $this->controllerGenerated = true;
+
         if ($this->fileExists($filePath)) {
             return;
         }
@@ -535,7 +539,6 @@ class MakeServiceCommand extends Command
         $this->ensureDirectoryExists($filePath);
         File::put($filePath, $content);
         $this->createdFiles[] = $filePath;
-        $this->controllerGenerated = true;
         $this->info("Created controller: {$filePath}");
     }
 

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.5] - 2025-10-11
+
+### Fixed
+- Interactive Route Management: Fixed route generation prompt not appearing when controller already exists (fixes #13)
+  - Route generation now triggers when using `--controller` or `--all` flags, even if controller file already exists
+  - Users will now see the interactive prompt: "Would you like to add API routes for this resource?"
+  - Ensures documented Interactive Route Management feature works as expected
+
+### Improved
+- Route handling logic: Controller generation now properly tracks when controller is requested, not just when created
+- All 114 tests passing with 276 assertions
+
 ## [0.3.4] - 2025-10-11
 
 ### Fixed
@@ -223,7 +235,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.4...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.5...HEAD
+[0.3.5]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.4...0.3.5
 [0.3.4]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.3...0.3.4
 [0.3.3]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.2...0.3.3
 [0.3.2]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.1...0.3.2
