@@ -787,7 +787,7 @@ test('command displays summary after generation', function () {
     $output = Artisan::output();
 
     expect($exitCode)->toBe(0);
-    expect($output)->toContain('Creating service');
+    expect($output)->toContain('Service Scaffolding Complete!');
 });
 
 test('command uses custom stubs when configured', function () {
