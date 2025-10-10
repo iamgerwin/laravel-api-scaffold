@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2025-10-11
+
+### Improved
+- Test coverage: Added 13 additional tests to increase coverage, now at 113 tests passing with 272 assertions
+- Code quality: Enhanced test suite with tests for cache preferences, service binding, admin panel resources, and route generation
+
+### Tests Added
+- Cache preferences file writing and JSON encoding
+- Service binding registration with use statements
+- Display summary output verification
+- Route generation methods
+- Nested directory creation
+- Nova and Filament resource generation with config checks
+- Admin panel default configuration handling
+
 ## [0.3.1] - 2025-10-11
 
 ### Fixed
@@ -189,7 +204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.1...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.2...HEAD
+[0.3.2]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.1...0.3.2
 [0.3.1]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.3...0.3.0
 [0.2.3]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.2...0.2.3
