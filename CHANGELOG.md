@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-10-11
+
+### Fixed
+- Stub file placeholder format: Updated all stub files (Nova, Filament, Entity Documentation) to use correct `{{ placeholder }}` format with spaces
+- Test coverage: Added 17 new tests to increase code coverage, now at 100 tests passing with 241 assertions
+- Mock expectations: Fixed `determineAdminPanel` test with proper formatter mock setup
+- Property initialization: Fixed `generateValidationRulesDoc` test by initializing modelName property
+
+### Improved
+- Test suite stability: Resolved test environment caching issues
+- Code quality: All 100 tests now passing consistently
+
 ## [0.3.0] - 2025-10-11
 
 ### Added
@@ -177,7 +189,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.1...HEAD
+[0.3.1]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.3...0.3.0
 [0.2.3]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.2...0.2.3
 [0.2.2]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.1...0.2.2
