@@ -13,6 +13,8 @@ Laravel API Scaffold automates the creation of service-oriented architecture com
 - 🎯 **Complete API Scaffolding**: Creates Models, Migrations, Controllers, Requests, and Resources
 - 🚀 **Laravel 11+ API Setup**: Automatically runs `php artisan install:api` for Laravel 11+ projects
 - 🛣️ **Interactive Route Management**: Choose to append routes to api.php or create separate route files
+- 🎛️ **Admin Panel Integration**: Generate Laravel Nova or Filament resources with auto-detection
+- 📝 **Entity Documentation**: Auto-generate comprehensive markdown documentation for each entity
 - 🧪 **Testing Ready**: Generates Pest/PHPUnit test files with common test cases
 - ⚙️ **Highly Configurable**: Customize paths, namespaces, and generation options
 - 🔒 **Safe Operations**: Automatic backups of existing files before modifications

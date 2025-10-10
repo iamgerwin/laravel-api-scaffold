@@ -1471,3 +1471,67 @@ test('generateRouteLinesOnly pluralizes model name for route', function () {
     expect($result)->toContain("'categories'");
     expect($result)->toContain('CategoryController');
 });
+
+// Admin Panel and Documentation Tests
+
+test('config has admin panel configuration', function () {
+    $config = config('api-scaffold.admin_panel');
+
+    expect($config)->toBeArray();
+    expect($config)->toHaveKey('enabled');
+    expect($config)->toHaveKey('auto_detect');
+    expect($config)->toHaveKey('nova');
+    expect($config)->toHaveKey('filament');
+});
+
+test('config has documentation configuration', function () {
+    $config = config('api-scaffold.documentation');
+
+    expect($config)->toBeArray();
+    expect($config['enabled'])->toBeTrue();
+    expect($config)->toHaveKey('path');
+    expect($config)->toHaveKey('include_relationships');
+});
+
+test('api-complete-admin preset has admin and docs enabled', function () {
+    $preset = config('api-scaffold.presets.api-complete-admin');
+
+    expect($preset)->toBeArray();
+    expect($preset['name'])->toBe('API Complete + Admin Panel');
+    expect($preset['options']['admin'])->toBeTrue();
+    expect($preset['options']['docs'])->toBeTrue();
+});
+
+test('command recognizes admin panel flags in signature', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+    $definition = $command->getDefinition();
+
+    expect($definition->hasOption('nova'))->toBeTrue();
+    expect($definition->hasOption('filament'))->toBeTrue();
+    expect($definition->hasOption('admin'))->toBeTrue();
+    expect($definition->hasOption('docs'))->toBeTrue();
+});
+
+test('isNovaInstalled returns boolean', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('isNovaInstalled');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeBool();
+});
+
+test('isFilamentInstalled returns boolean', function () {
+    $command = new \Iamgerwin\LaravelApiScaffold\Commands\MakeServiceCommand();
+
+    $reflection = new ReflectionClass($command);
+    $method = $reflection->getMethod('isFilamentInstalled');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($command);
+
+    expect($result)->toBeBool();
+});

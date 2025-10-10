@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-10-11
+
+### Added
+- **Admin Panel Resource Generation**: Support for Laravel Nova and Filament admin panel resources (addresses #6)
+  - Auto-detection of installed admin panels (Nova/Filament)
+  - Command flags: `--nova`, `--filament`, `--admin`
+  - Nova resource generation with basic field configuration
+  - Filament resource generation with List, Create, and Edit pages
+  - Interactive prompts for admin panel selection
+  - Configuration for Nova and Filament namespaces and paths
+- **Entity Documentation Generation**: Auto-generated markdown documentation for each entity (addresses #6)
+  - Command flag: `--docs`
+  - Comprehensive entity documentation including:
+    - Model overview and database schema
+    - Relationships documentation
+    - API endpoint documentation
+    - Service layer documentation
+    - Admin panel integration details
+    - Validation rules documentation
+  - Configurable documentation path and options
+- **New Preset**: "API Complete + Admin Panel" preset for full-stack scaffolding
+- **Enhanced Interactive Mode**: Added admin panel and documentation options to component selection
+
+### Improved
+- Extended command signature with admin panel and documentation flags
+- Enhanced `generateFromOptions` to support admin and docs generation
+- Added tracking for model and migration generation for better context
+- Updated interactive component selection with admin and docs options
+
 ## [0.2.3] - 2025-10-10
 
 ### Changed
@@ -148,7 +177,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.3...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.3.0...HEAD
+[0.3.0]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.3...0.3.0
 [0.2.3]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.2...0.2.3
 [0.2.2]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.0...0.2.1
