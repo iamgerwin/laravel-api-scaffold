@@ -47,6 +47,8 @@ class MakeServiceCommand extends Command
 
     protected bool $migrationGenerated = false;
 
+    protected bool $routesGenerated = false;
+
     protected ?string $migrationPath = null;
 
     public function handle(): int
@@ -110,13 +112,13 @@ class MakeServiceCommand extends Command
             $this->generateEntityDocumentation();
         }
 
-        $this->displaySummary();
-
         // Setup API routes for Laravel 11+
         $this->setupApiRoutes();
 
         // Handle route generation
         $this->handleRouteGeneration();
+
+        $this->displaySummary();
 
         return self::SUCCESS;
     }
@@ -432,13 +434,13 @@ class MakeServiceCommand extends Command
             $this->generateEntityDocumentation();
         }
 
-        $this->displaySummary();
-
         // Setup API routes for Laravel 11+
         $this->setupApiRoutes();
 
         // Handle route generation
         $this->handleRouteGeneration();
+
+        $this->displaySummary();
 
         return self::SUCCESS;
     }
@@ -1164,6 +1166,8 @@ Customize the form fields and table columns as needed.';
         } else {
             $this->appendToApiRoutes();
         }
+
+        $this->routesGenerated = true;
     }
 
     protected function createSeparateRouteFile(): void
@@ -1277,8 +1281,15 @@ PHP;
         $this->line('  2. Run: php artisan migrate');
         $this->line('  3. Add validation rules to your Request class');
         $this->line('  4. Customize your Resource class output');
-        $this->line('  5. Add routes to your routes/api.php file');
-        $this->line('  6. Run tests: php artisan test');
+
+        // Only show "add routes" step if routes weren't automatically generated
+        if (! $this->routesGenerated && $this->controllerGenerated) {
+            $this->line('  5. Add routes to your routes/api.php file');
+            $this->line('  6. Run tests: php artisan test');
+        } else {
+            $this->line('  5. Run tests: php artisan test');
+        }
+
         $this->newLine();
     }
 }
