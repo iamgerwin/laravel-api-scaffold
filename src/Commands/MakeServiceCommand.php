@@ -23,6 +23,10 @@ class MakeServiceCommand extends Command
                             {--resource : Generate resource}
                             {--test : Generate test}
                             {--all : Generate all related files}
+                            {--nova : Generate Laravel Nova resource}
+                            {--filament : Generate Filament resource}
+                            {--admin : Generate admin panel resource (auto-detect)}
+                            {--docs : Generate entity documentation}
                             {--force : Overwrite existing files}
                             {--interactive : Force interactive mode}
                             {--no-interactive : Disable interactive mode}';
@@ -38,6 +42,12 @@ class MakeServiceCommand extends Command
     protected array $createdFiles = [];
 
     protected bool $controllerGenerated = false;
+
+    protected bool $modelGenerated = false;
+
+    protected bool $migrationGenerated = false;
+
+    protected ?string $migrationPath = null;
 
     public function handle(): int
     {
@@ -90,6 +100,16 @@ class MakeServiceCommand extends Command
             $this->generateTest();
         }
 
+        // Generate admin panel resources
+        if ($generateAll || $this->option('admin') || $this->option('nova') || $this->option('filament')) {
+            $this->generateAdminPanelResource();
+        }
+
+        // Generate entity documentation
+        if ($generateAll || $this->option('docs')) {
+            $this->generateEntityDocumentation();
+        }
+
         $this->displaySummary();
 
         // Setup API routes for Laravel 11+
@@ -121,6 +141,10 @@ class MakeServiceCommand extends Command
             || $this->option('request')
             || $this->option('resource')
             || $this->option('test')
+            || $this->option('nova')
+            || $this->option('filament')
+            || $this->option('admin')
+            || $this->option('docs')
             || $this->option('all');
 
         // Use interactive mode if no flags and config allows
@@ -195,6 +219,8 @@ class MakeServiceCommand extends Command
                     'request' => 'Form Request',
                     'resource' => 'API Resource',
                     'test' => 'Feature Test',
+                    'admin' => 'Admin Panel Resource (Nova/Filament)',
+                    'docs' => 'Entity Documentation',
                 ],
                 default: ['api', 'model', 'controller', 'request', 'resource', 'test']
             );
@@ -208,6 +234,8 @@ class MakeServiceCommand extends Command
                 'request' => in_array('request', $components),
                 'resource' => in_array('resource', $components),
                 'test' => in_array('test', $components),
+                'admin' => in_array('admin', $components),
+                'docs' => in_array('docs', $components),
             ];
         } else {
             // For predefined presets, show what will be generated and allow confirmation
@@ -243,6 +271,8 @@ class MakeServiceCommand extends Command
                         'request' => 'Form Request',
                         'resource' => 'API Resource',
                         'test' => 'Feature Test',
+                        'admin' => 'Admin Panel Resource (Nova/Filament)',
+                        'docs' => 'Entity Documentation',
                     ],
                     default: $defaultComponents
                 );
@@ -255,6 +285,8 @@ class MakeServiceCommand extends Command
                     'request' => in_array('request', $components),
                     'resource' => in_array('resource', $components),
                     'test' => in_array('test', $components),
+                    'admin' => in_array('admin', $components),
+                    'docs' => in_array('docs', $components),
                 ];
             }
         }
@@ -386,6 +418,18 @@ class MakeServiceCommand extends Command
 
         if ($options['test']) {
             $this->generateTest();
+        }
+
+        // Generate admin panel resources
+        if ($options['admin'] ?? false) {
+            $this->input->setOption('admin', true);
+            $this->generateAdminPanelResource();
+        }
+
+        // Generate entity documentation
+        if ($options['docs'] ?? false) {
+            $this->input->setOption('docs', true);
+            $this->generateEntityDocumentation();
         }
 
         $this->displaySummary();
@@ -553,6 +597,7 @@ class MakeServiceCommand extends Command
             'name' => $this->modelName,
         ]);
 
+        $this->modelGenerated = true;
         $this->createdFiles[] = $modelPath;
         $this->info("Created model: {$modelPath}");
     }
@@ -564,6 +609,14 @@ class MakeServiceCommand extends Command
         Artisan::call('make:migration', [
             'name' => "create_{$tableName}_table",
         ]);
+
+        $this->migrationGenerated = true;
+
+        // Find the most recent migration file for this table
+        $migrationFiles = glob(database_path("migrations/*_create_{$tableName}_table.php"));
+        if (! empty($migrationFiles)) {
+            $this->migrationPath = end($migrationFiles);
+        }
 
         $this->info("Created migration for table: {$tableName}");
     }
@@ -592,6 +645,313 @@ class MakeServiceCommand extends Command
         File::put($filePath, $content);
         $this->createdFiles[] = $filePath;
         $this->info("Created test: {$filePath}");
+    }
+
+    protected function generateAdminPanelResource(): void
+    {
+        if (! config('api-scaffold.admin_panel.enabled', true)) {
+            return;
+        }
+
+        // Determine which admin panel to generate for
+        $adminPanel = $this->determineAdminPanel();
+
+        if (! $adminPanel) {
+            return;
+        }
+
+        if ($adminPanel === 'nova') {
+            $this->generateNovaResource();
+        } elseif ($adminPanel === 'filament') {
+            $this->generateFilamentResource();
+        }
+    }
+
+    protected function determineAdminPanel(): ?string
+    {
+        // Check explicit flags first
+        if ($this->option('nova')) {
+            return 'nova';
+        }
+
+        if ($this->option('filament')) {
+            return 'filament';
+        }
+
+        // Auto-detect if --admin flag is used or config enables auto-detect
+        if (! $this->option('admin') && ! config('api-scaffold.admin_panel.auto_detect', true)) {
+            return null;
+        }
+
+        // Check default from config
+        $default = config('api-scaffold.admin_panel.default');
+        if ($default && in_array($default, ['nova', 'filament'])) {
+            return $default;
+        }
+
+        // Auto-detect installed admin panels
+        if ($this->isNovaInstalled()) {
+            return 'nova';
+        }
+
+        if ($this->isFilamentInstalled()) {
+            return 'filament';
+        }
+
+        $this->warn('⚠ No admin panel detected. Install Laravel Nova or Filament to generate admin resources.');
+
+        return null;
+    }
+
+    protected function isNovaInstalled(): bool
+    {
+        return class_exists('Laravel\Nova\Nova');
+    }
+
+    protected function isFilamentInstalled(): bool
+    {
+        return class_exists('Filament\Filament');
+    }
+
+    protected function generateNovaResource(): void
+    {
+        if (! config('api-scaffold.admin_panel.nova.enabled', true)) {
+            return;
+        }
+
+        $resourceName = $this->modelName;
+        $namespace = config('api-scaffold.admin_panel.nova.namespace', 'App\\Nova');
+        $path = config('api-scaffold.admin_panel.nova.path', app_path('Nova'));
+        $filePath = "{$path}/{$resourceName}.php";
+
+        if ($this->fileExists($filePath)) {
+            return;
+        }
+
+        $stub = $this->getStub('nova.resource.stub');
+
+        $content = $this->replaceStubPlaceholders($stub, [
+            'namespace' => $namespace,
+            'className' => $resourceName,
+            'modelClass' => $this->modelName,
+            'modelNamespace' => config('api-scaffold.namespaces.model', 'App\\Models'),
+            'fieldImports' => '',
+            'fields' => $this->generateNovaFields(),
+        ]);
+
+        $this->ensureDirectoryExists($filePath);
+        File::put($filePath, $content);
+        $this->createdFiles[] = $filePath;
+        $this->info("Created Nova resource: {$filePath}");
+    }
+
+    protected function generateNovaFields(): string
+    {
+        // Basic fields - can be enhanced with migration parsing
+        return <<<'PHP'
+
+            //
+PHP;
+    }
+
+    protected function generateFilamentResource(): void
+    {
+        if (! config('api-scaffold.admin_panel.filament.enabled', true)) {
+            return;
+        }
+
+        $resourceName = "{$this->modelName}Resource";
+        $namespace = config('api-scaffold.admin_panel.filament.namespace', 'App\\Filament\\Resources');
+        $path = config('api-scaffold.admin_panel.filament.path', app_path('Filament/Resources'));
+        $filePath = "{$path}/{$resourceName}.php";
+
+        if ($this->fileExists($filePath)) {
+            return;
+        }
+
+        // Generate resource file
+        $stub = $this->getStub('filament.resource.stub');
+
+        $content = $this->replaceStubPlaceholders($stub, [
+            'namespace' => $namespace,
+            'className' => $resourceName,
+            'modelClass' => $this->modelName,
+            'modelNamespace' => config('api-scaffold.namespaces.model', 'App\\Models'),
+            'formFields' => $this->generateFilamentFormFields(),
+            'tableColumns' => $this->generateFilamentTableColumns(),
+        ]);
+
+        $this->ensureDirectoryExists($filePath);
+        File::put($filePath, $content);
+        $this->createdFiles[] = $filePath;
+        $this->info("Created Filament resource: {$filePath}");
+
+        // Generate page files
+        $this->generateFilamentPages($resourceName, $namespace, $path);
+    }
+
+    protected function generateFilamentPages(string $resourceName, string $namespace, string $path): void
+    {
+        $pagesPath = "{$path}/{$resourceName}/Pages";
+        $pagesNamespace = "{$namespace}\\{$resourceName}\\Pages";
+
+        // List page
+        $this->generateFilamentPage(
+            'filament.resource.list-page.stub',
+            "{$pagesPath}/List{$this->modelName}.php",
+            $pagesNamespace,
+            $resourceName,
+            $namespace
+        );
+
+        // Create page
+        $this->generateFilamentPage(
+            'filament.resource.create-page.stub',
+            "{$pagesPath}/Create{$this->modelName}.php",
+            $pagesNamespace,
+            $resourceName,
+            $namespace
+        );
+
+        // Edit page
+        $this->generateFilamentPage(
+            'filament.resource.edit-page.stub',
+            "{$pagesPath}/Edit{$this->modelName}.php",
+            $pagesNamespace,
+            $resourceName,
+            $namespace
+        );
+    }
+
+    protected function generateFilamentPage(
+        string $stubName,
+        string $filePath,
+        string $namespace,
+        string $resourceName,
+        string $resourceNamespace
+    ): void {
+        if ($this->fileExists($filePath)) {
+            return;
+        }
+
+        $stub = $this->getStub($stubName);
+
+        $content = $this->replaceStubPlaceholders($stub, [
+            'namespace' => $namespace,
+            'className' => $resourceName,
+            'modelClass' => $this->modelName,
+            'resourceNamespace' => $resourceNamespace,
+        ]);
+
+        $this->ensureDirectoryExists($filePath);
+        File::put($filePath, $content);
+        $this->createdFiles[] = $filePath;
+    }
+
+    protected function generateFilamentFormFields(): string
+    {
+        // Basic fields - can be enhanced with migration parsing
+        return <<<'PHP'
+                //
+PHP;
+    }
+
+    protected function generateFilamentTableColumns(): string
+    {
+        // Basic columns - can be enhanced with migration parsing
+        return <<<'PHP'
+                //
+PHP;
+    }
+
+    protected function generateEntityDocumentation(): void
+    {
+        if (! config('api-scaffold.documentation.enabled', true)) {
+            return;
+        }
+
+        $docsPath = config('api-scaffold.documentation.path', base_path('docs/entities'));
+        $filePath = "{$docsPath}/{$this->modelName}.md";
+
+        if ($this->fileExists($filePath)) {
+            return;
+        }
+
+        $stub = $this->getStub('entity.documentation.stub');
+
+        $content = $this->replaceStubPlaceholders($stub, [
+            'modelClass' => $this->modelName,
+            'modelNamespace' => config('api-scaffold.namespaces.model', 'App\\Models'),
+            'tableName' => Str::snake(Str::pluralStudly($this->modelName)),
+            'modelPlural' => Str::plural($this->modelName),
+            'modelKebab' => Str::kebab(Str::plural($this->modelName)),
+            'generatedDate' => now()->toDateTimeString(),
+            'fieldsList' => $this->generateFieldsList(),
+            'relationshipsList' => $this->generateRelationshipsList(),
+            'exampleCreatePayload' => $this->generateExamplePayload(),
+            'exampleUpdatePayload' => $this->generateExamplePayload(),
+            'adminPanelSection' => $this->generateAdminPanelDocSection(),
+            'validationRules' => $this->generateValidationRulesDoc(),
+        ]);
+
+        $this->ensureDirectoryExists($filePath);
+        File::put($filePath, $content);
+        $this->createdFiles[] = $filePath;
+        $this->info("Created entity documentation: {$filePath}");
+    }
+
+    protected function generateFieldsList(): string
+    {
+        return '| Field | Type | Description |
+|-------|------|-------------|
+| id | bigInteger | Primary key |
+| created_at | timestamp | Creation timestamp |
+| updated_at | timestamp | Last update timestamp |';
+    }
+
+    protected function generateRelationshipsList(): string
+    {
+        return '*No relationships defined yet. Update this section as you add relationships to the model.*';
+    }
+
+    protected function generateExamplePayload(): string
+    {
+        return '  // Add your fields here';
+    }
+
+    protected function generateAdminPanelDocSection(): string
+    {
+        $sections = [];
+
+        if ($this->isNovaInstalled() && $this->option('nova')) {
+            $sections[] = '
+## Laravel Nova Admin Panel
+
+**Resource:** `App\Nova\\'.$this->modelName.'`
+
+Nova resource has been generated with basic field configuration. Customize the fields, filters, and actions as needed.';
+        }
+
+        if ($this->isFilamentInstalled() && $this->option('filament')) {
+            $sections[] = '
+## Filament Admin Panel
+
+**Resource:** `App\Filament\Resources\\'.$this->modelName.'Resource`
+
+Filament resource has been generated with:
+- Form builder configuration
+- Table builder configuration
+- List, Create, and Edit pages
+
+Customize the form fields and table columns as needed.';
+        }
+
+        return empty($sections) ? '' : implode("\n", $sections);
+    }
+
+    protected function generateValidationRulesDoc(): string
+    {
+        return '*Add validation rules to `App\Http\Requests\\'.$this->modelName.'Request`*';
     }
 
     protected function registerServiceBinding(): void
