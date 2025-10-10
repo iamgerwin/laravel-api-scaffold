@@ -11,7 +11,6 @@ use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\table;
-use function Laravel\Prompts\info;
 
 class MakeServiceCommand extends Command
 {
