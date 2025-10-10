@@ -1317,7 +1317,7 @@ test('registerServiceBinding handles provider without namespace gracefully', fun
     ]);
 
     $output = Artisan::output();
-    expect($output)->toContain('Could not find namespace declaration');
+    expect($output)->toContain('Could not find namespace declaration in AppServiceProvider');
 
     // Cleanup
     File::delete($providerPath);
