@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2025-10-10
+
+### Changed
+- Updated SECURITY.md to reflect current supported version (0.2.x)
+
 ## [0.2.2] - 2025-10-10
 
 ### Fixed
@@ -143,7 +148,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Security policy
 
-[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.2...HEAD
+[Unreleased]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.3...HEAD
+[0.2.3]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.2...0.2.3
 [0.2.2]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/iamgerwin/laravel-api-scaffold/compare/0.1.4...0.2.0
